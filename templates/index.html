@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dryer Control Panel</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Dryer Control Panel</h1>
+
+    <div>
+        <label>Set Temperature (°C):</label>
+        <input type="number" id="tempInput" min="1" max="200">
+        <button onclick="setTemperature()">Set</button>
+    </div>
+
+    <div>
+        <button onclick="powerOn()">Power ON</button>
+        <button onclick="powerOff()">Power OFF</button>
+    </div>
+
+    <div>
+        <button onclick="getStatus()">Get Status</button>
+        <p id="statusOutput"></p>
+    </div>
+
+    <script>
+        const baseUrl = "/";
+
+        async function setTemperature() {
+            const value = document.getElementById("tempInput").value;
+            const res = await fetch(`${baseUrl}setTemperature`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ value: parseFloat(value) })
+            });
+            const data = await res.json();
+            alert(JSON.stringify(data));
+        }
+
+        async function powerOn() {
+            await fetch(`${baseUrl}powerOn`, { method: "POST" });
+        }
+
+        async function powerOff() {
+            await fetch(`${baseUrl}powerOff`, { method: "POST" });
+        }
+
+        async function getStatus() {
+            const res = await fetch(`${baseUrl}status`);
+            const data = await res.json();
+            document.getElementById("statusOutput").innerText = JSON.stringify(data);
+        }
+    </script>
+</body>
+</html>
