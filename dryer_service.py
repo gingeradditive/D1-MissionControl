@@ -3,6 +3,7 @@ import socket
 import time
 import platform
 from simple_pid import PID
+import json
 
 # Determina ambiente
 IS_LINUX = platform.system() == "Linux"
@@ -17,12 +18,15 @@ else:
     print("[INFO] Ambiente Windows rilevato: modalità SVILUPPO")
 
 # Simula temperatura
+
+
 def read_temperature():
     if IS_LINUX:
         return 50.0  # Da sostituire con lettura reale
     else:
         print("[SIMULAZIONE] Lettura temperatura simulata")
         return 50.0
+
 
 # Inizializza PID
 pid = PID(Kp=2.0, Ki=1.0, Kd=0.1, setpoint=60.0)
@@ -39,6 +43,7 @@ sock.setblocking(False)
 dryer_on = True
 last_sender = None
 
+
 def handle_udp_commands():
     global dryer_on, last_sender
     try:
@@ -53,13 +58,15 @@ def handle_udp_commands():
         elif message.upper() == "POWER_ON":
             dryer_on = True
             sock.sendto(b"DRYER_ON", addr)
-        elif message.upper() == "GET_TEMPERATURE":
-            current_temp = read_temperature()
-            sock.sendto(f"{current_temp:.2f}".encode(), addr)
         elif message.upper() == "GET_STATUS":
             status = "ON" if dryer_on else "OFF"
             set_temp = pid.setpoint
-            sock.sendto(f"STATUS:{status},SET:{set_temp:.1f}".encode(), addr)
+            response = {
+                "DryerStatus": status,
+                "TemperatureSet": round(set_temp, 1),
+                "CurrentTemperature": round(read_temperature(), 1)
+            }
+            sock.sendto(json.dumps(response).encode(), addr)
         else:
             try:
                 new_temp = float(message)
@@ -73,6 +80,7 @@ def handle_udp_commands():
         pass
     except ConnectionResetError:
         print("[WARN] Connessione UDP resettata dal client. Ignoro.")
+
 
 def control_ssr(output):
     if IS_LINUX:
@@ -88,12 +96,14 @@ def control_ssr(output):
         else:
             print("[SIMULAZIONE] SSR OFF (output PID < 0.5)")
 
+
 def turn_off_ssr():
     if IS_LINUX:
         print("SSR OFF (manuale)")
         # GPIO.output(SSR_PIN, GPIO.LOW)
     else:
         print("[SIMULAZIONE] SSR OFF (dryer spento)")
+
 
 try:
     while True:
@@ -103,7 +113,8 @@ try:
 
         if dryer_on:
             output = pid(temp)
-            print(f"[PID] Output PID: {output:.2f} | SetPoint: {pid.setpoint:.2f}°C")
+            print(
+                f"[PID] Output PID: {output:.2f} | SetPoint: {pid.setpoint:.2f}°C")
             control_ssr(output)
         else:
             turn_off_ssr()

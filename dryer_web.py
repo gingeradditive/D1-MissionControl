@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, JSONResponse
 import requests
+import json
 
 app = FastAPI(title="Dryer API", version="1.0")
 
@@ -58,13 +59,6 @@ def set_temperature(data: SetTemperatureRequest):
         return {"status": "ok", "setTemperature": data.value}
     return {"status": "error", "message": response}
 
-@app.get("/api/getTemperature")
-def get_temperature():
-    response = send_udp_message("GET_TEMPERATURE", expect_response=True)
-    if response.startswith("error:"):
-        return {"status": "error", "message": response}
-    return {"status": "ok", "temperature": response}
-
 @app.post("/api/power")
 def power_dryer(data: PowerRequest):
     command = "POWER_ON" if data.on else "POWER_OFF"
@@ -78,4 +72,4 @@ def get_status():
     response = send_udp_message("GET_STATUS", expect_response=True)
     if response.startswith("error:"):
         return {"status": "error", "message": response}
-    return {"status": "ok", "dryer_status": response}
+    return json.loads(response)

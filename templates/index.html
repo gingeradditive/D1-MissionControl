@@ -15,16 +15,27 @@
         <div class="container-fluid">
             <span class="navbar-brand">
                 <!-- Button Back  -->
-                <a href="/" class="btn btn-outline-secondary me-3" id="BackToMainsail" style="display: none;"><i class="bi bi-arrow-left"></i> Back to Mainsail</a> 
+                <a href="/" class="btn btn-outline-secondary me-3" id="BackToMainsail" style="display: none;"><i class="bi bi-arrow-left"></i> Back to Mainsail</a>
                 <img src="/static/sidebar-logo.svg" height="32px"> Dryer
             </span>
         </div>
     </nav>
     <div class="container-fluid">
         <div class="row flex-nowrap">
-            <div class="col">
-                <!-- CONTENT -->
-                <div class="content-min-height">
+            <div class="col py-3">
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <i class="bi bi-thermometer-half"></i> Temperature
+                    </div>
+                    <span class="h1">Current <span id="currentTemperature">--</span>c°</span>
+                    <span class="h1">Set <span id="setTemperature">--</span>c°</span>
+                </div>
+            </div>
+            <div class="col py-3">
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <i class="bi bi-toggles"></i> Controls
+                    </div>
                     <div>
                         <label>Set Temperature (°C):</label>
                         <input type="number" id="tempInput" min="1" max="200">
@@ -35,21 +46,25 @@
                         <button onclick="powerOn()">Power ON</button>
                         <button onclick="powerOff()">Power OFF</button>
                     </div>
-
-                    <div>
-                        <button onclick="getStatus()">Get Status</button>
-                        <p id="statusOutput"></p>
-                    </div>
                 </div>
-
-                <!-- FOOTER -->
-                <!-- <hr>
-        <footer class="container-fluid">
-          <p>&copy; 2024 G1 Tools made by Gingeradditive srls</p>
-        </footer> -->
             </div>
         </div>
     </div>
+
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="bi bi-x-circle"></i> 
+                <strong class="me-auto">Ginger</strong>
+                <small>11 mins ago</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                Hello, world! This is a toast message.
+            </div>
+        </div>
+    </div>
+
     <script src="/static/bootstrap.bundle.min.js"></script>
     <script src="/static/jquery.js"></script>
     <script src="/static/script.js"></script>

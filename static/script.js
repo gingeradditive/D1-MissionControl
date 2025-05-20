@@ -1,11 +1,18 @@
-$(document).ready(function() {
-  $.get("/api/discovery-check", function(data) {
-    if (data.reachable) {
-      $("#BackToMainsail").show();  // o rimuovi classe .d-none
-    } else {
-      $("#BackToMainsail").hide();  // o aggiungi classe .d-none
-    }
-  });
+$(document).ready(function () {
+    $.get("/api/discovery-check", function (data) {
+        if (data.reachable) {
+            $("#BackToMainsail").show();  // o rimuovi classe .d-none
+        } else {
+            $("#BackToMainsail").hide();  // o aggiungi classe .d-none
+        }
+    });
+
+    //   Run function every 5 seconds
+    setInterval(function () {
+        updateStatus();
+    }, 5000);
+
+    updateStatus();
 });
 
 const baseUrl = "/api/";
@@ -18,7 +25,7 @@ async function setTemperature() {
         body: JSON.stringify({ value: parseFloat(value) })
     });
     const data = await res.json();
-    alert(JSON.stringify(data));
+    updateStatus();
 }
 
 async function powerOn() {
@@ -27,6 +34,7 @@ async function powerOn() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ on: true })
     });
+    updateStatus();
 }
 
 async function powerOff() {
@@ -36,10 +44,23 @@ async function powerOff() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ on: false })
     });
+    updateStatus();
 }
 
-async function getStatus() {
-    const res = await fetch(`${baseUrl}status`);
-    const data = await res.json();
-    document.getElementById("statusOutput").innerText = JSON.stringify(data);
+function updateStatus() {
+    // const res = await fetch(`${baseUrl}status`);
+    // const data = await res.json();
+    // document.getElementById("statusOutput").innerText = JSON.stringify(data);
+    $.get("/api/status", function (data) {
+        if (data.status == "error") {
+            // show #liveToast 
+            $("#liveToast .toast-body").text(data.message);
+            $("#liveToast .me-auto").text("ERROR");
+            $("#liveToast").toast("show");
+        }
+
+        $("#currentTemperature").text(data.CurrentTemperature);
+        $("#setTemperature").text(data.TemperatureSet);
+        // $("#dryerStatus").text(data.DryerStatus);
+    });
 }
