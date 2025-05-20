@@ -1,8 +1,85 @@
 body {
-    font-family: Arial, sans-serif;
-    margin: 2rem;
+    background: #f5f5f5;
 }
-button {
-    margin: 0.5rem;
-    padding: 0.5rem 1rem;
+
+.navbar {
+    background-color: #ffffff !important;
+    height: 48px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.navbar-brand {
+    color: #000 !important;
+}
+
+.navbar-brand {
+    color: #fff;
+}
+
+.content-min-height {
+    min-height: calc(100vh - 80px);
+}
+
+.card {
+    box-shadow: 0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f;
+    background: #fff;
+    padding: 10px;
+    border-radius: 4px;
+    border: none !important;
+}
+
+.card-header {
+    background: none;
+    margin: -10px -10px 10px -10px;
+    font-size: 1.25rem;
+    line-height: 1.5;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.card-header .bi {
+    color: #757575;
+}
+
+.gauge-container {
+    position: relative;
+    width: 200px;
+    height: 100px;
+    overflow: hidden;
+}
+
+.gauge-outer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: conic-gradient(#198754 0%,
+            #198754 var(--value),
+            #e9ecef var(--value));
+    transform: rotate(-135deg);
+}
+
+.gauge-inner {
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background-color: white;
+    z-index: 1;
+}
+
+.gauge-label {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #198754;
+    z-index: 2;
 }
