@@ -46,7 +46,7 @@ Description=Dryer Web FastAPI Service
 After=network.target
 
 [Service]
-ExecStart=${UVICORN} dryer_web:app --host 0.0.0.0 --port 8000
+ExecStart=sudo ${UVICORN} dryer_web:app --host 0.0.0.0 --port 80
 WorkingDirectory=${APP_DIR}
 Restart=always
 User=$(whoami)
