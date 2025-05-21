@@ -132,7 +132,9 @@ function updateStatus() {
         }
 
         updateGauge(data.CurrentTemperature, data.TemperatureSet)
-        updateDryerStatus(data.DryerStatus, "---", "---")
+
+
+        updateDryerStatus(data.DryerStatus, data.CycleStatus, Math.ceil(data.CycleTimeLeftSec/60))
         // $("#dryerStatus").text(data.DryerStatus);
     });
 }
