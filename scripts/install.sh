@@ -6,8 +6,10 @@ echo "🔧 Installing system packages..."
 sudo apt-get update
 sudo apt-get install -y python3 python3-venv python3-pip
 
-echo "🐍 Creating Python virtual environment..."
-cd "$(dirname "$0")"
+# Torna alla root del progetto
+cd "$(dirname "$0")/.."
+
+echo "📁 Creating Python virtual environment..."
 python3 -m venv venv
 
 echo "📦 Activating environment and installing Python packages..."
@@ -18,7 +20,7 @@ APP_DIR=$(pwd)/..
 PYTHON=${APP_DIR}/venv/bin/python
 UVICORN=${APP_DIR}/venv/bin/uvicorn
 
-echo "📁 Creating systemd service files..."
+echo "🛠️ Creating systemd service files..."
 
 # DryerLogic.service
 cat <<EOF | sudo tee /etc/systemd/system/DryerLogic.service > /dev/null
@@ -54,11 +56,11 @@ Environment=PYTHONUNBUFFERED=1
 WantedBy=multi-user.target
 EOF
 
-echo "🔄 Reloading and enabling services..."
+echo "🔄 Enabling and starting services..."
 sudo systemctl daemon-reexec
 sudo systemctl daemon-reload
-sudo systemctl enable DryerLogic.service
-sudo systemctl enable DryerWeb.service
+sudo systemctl enable DryerLogic
+sudo systemctl enable DryerWeb
 
 echo "✅ Setup complete! Start services with:"
 echo "   sudo systemctl start DryerLogic"
