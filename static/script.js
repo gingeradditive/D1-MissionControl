@@ -166,10 +166,19 @@ function refreshVcs() {
 
         $("#vcs-GingerDryer .repoVersion").text(data.git_updates_tag);
         if (data.git_updates_available) {
-            $("#vcs-GingerDryer .btnUpdate").removeClass("btn-outline-secondary").addClass("btn-danger").prop("disabled", false);
+            $("#vcs-GingerDryer .btnUpdate")
+                .removeClass("btn-outline-secondary")
+                .addClass("btn-danger")
+                .prop("disabled", false)
+                .html('<i class="bi bi-arrow-clockwise"></i> UPDATE');
         }
         else {
-            $("#vcs-GingerDryer .btnUpdate").removeClass("btn-danger").addClass("btn-outline-secondary").prop("disabled", true);
+            $("#vcs-GingerDryer .btnUpdate")
+                .removeClass("btn-danger")
+                .addClass("btn-outline-secondary")
+                .prop("disabled", true)
+                .html('<i class="bi bi-check"></i> UP-TO-DATE');
+
         }
 
         // #vcs-system
