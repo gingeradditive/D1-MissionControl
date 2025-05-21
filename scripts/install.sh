@@ -14,7 +14,7 @@ python3 -m venv venv
 
 echo "📦 Activating environment and installing Python packages..."
 ./venv/bin/pip install --upgrade pip
-./venv/bin/pip install fastapi uvicorn simple_pid
+./venv/bin/pip install fastapi uvicorn simple_pid requests Jinja2 
 
 APP_DIR=$(pwd)
 PYTHON=${APP_DIR}/venv/bin/python

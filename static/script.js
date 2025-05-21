@@ -32,7 +32,7 @@ function updateGauge(currentTemp, setTemp) {
 
     const tolerance = 0.05 * setTemp;
     if (setTemp === 0) {
-        tolerance = infinity;
+        tolerance = Infinity
     }
 
     // change color progress bar to green if currentTemp is +-5% setTemp
