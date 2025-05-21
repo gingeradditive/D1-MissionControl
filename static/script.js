@@ -166,18 +166,18 @@ function refreshVcs() {
 
         $("#vcs-GingerDryer .repoVersion").text(data.git_updates_tag);
         if (data.git_updates_available) {
-            $("#vsc-GingerDryer .btnUpdate").removeClass("btn-outline-secondary").addClass("btn-danger").prop("disabled", false);
+            $("#vcs-GingerDryer .btnUpdate").removeClass("btn-outline-secondary").addClass("btn-danger").prop("disabled", false);
         }
         else {
-            $("#vsc-GingerDryer .btnUpdate").removeClass("btn-danger").addClass("btn-outline-secondary").prop("disabled", true);
+            $("#vcs-GingerDryer .btnUpdate").removeClass("btn-danger").addClass("btn-outline-secondary").prop("disabled", true);
         }
 
-        // #vsc-system
+        // #vcs-system
         if (data.system_updates_available) {
-            $("#vsc-system .btnUpdate").removeClass("btn-outline-secondary").addClass("btn-danger").prop("disabled", false);
+            $("#vcs-system .btnUpdate").removeClass("btn-outline-secondary").addClass("btn-danger").prop("disabled", false);
         }
         else {
-            $("#vsc-system .btnUpdate").removeClass("btn-danger").addClass("btn-outline-secondary").prop("disabled", true);
+            $("#vcs-system .btnUpdate").removeClass("btn-danger").addClass("btn-outline-secondary").prop("disabled", true);
         }
     });
 }
