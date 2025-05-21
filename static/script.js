@@ -183,10 +183,18 @@ function refreshVcs() {
 
         // #vcs-system
         if (data.system_updates_available) {
-            $("#vcs-system .btnUpdate").removeClass("btn-outline-secondary").addClass("btn-danger").prop("disabled", false);
+            $("#vcs-system .btnUpdate")
+                .removeClass("btn-outline-secondary")
+                .addClass("btn-danger")
+                .prop("disabled", false)
+                .html('<i class="bi bi-arrow-clockwise"></i> UPDATE');
         }
         else {
-            $("#vcs-system .btnUpdate").removeClass("btn-danger").addClass("btn-outline-secondary").prop("disabled", true);
+            $("#vcs-system .btnUpdate")
+                .removeClass("btn-danger")
+                .addClass("btn-outline-secondary")
+                .prop("disabled", true)
+                .html('<i class="bi bi-check"></i> UP-TO-DATE');
         }
     });
 }
