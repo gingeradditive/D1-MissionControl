@@ -4,37 +4,35 @@ import time
 import platform
 from simple_pid import PID
 import json
+import modules.consoleEnhancer as console
 
-# Determina ambiente
 IS_LINUX = platform.system() == "Linux"
+HOST = '127.0.0.1'
+PORT = 9999
+CICLE_DURETION = 60 * 1  # sec*mmin
+REGENERATION_TEMP = 80.0
 
 if IS_LINUX:
-    print("[INFO] Ambiente Linux rilevato: modalità PRODUZIONE")
-    # import RPi.GPIO as GPIO
+    console.log_info("Ambiente Linux rilevato: modalità PRODUZIONE")
     SSR_PIN = 17
+    REGNERATIONFLOWPATH_PIN = 27
     # GPIO.setmode(GPIO.BCM)
     # GPIO.setup(SSR_PIN, GPIO.OUT)
+    # GPIO.setup(REGNERATIONFLOWPATH_PIN, GPIO.OUT)
 else:
-    print("[INFO] Ambiente Windows rilevato: modalità SVILUPPO")
-
-# Simula temperatura
+    console.log_info("Ambiente Windows rilevato: modalità SVILUPPO")
 
 
 def read_temperature():
     if IS_LINUX:
-        return 50.0  # Da sostituire con lettura reale
+        return 50.0  # TODO:Da sostituire con lettura reale
     else:
-        print("[SIMULAZIONE] Lettura temperatura simulata")
-        return 50.0
+        console.log_demo("Lettura temperatura simulata")
+        return 50.0 + (os.urandom(1)[0] % 10)
 
 
-# Inizializza PID
 pid = PID(Kp=2.0, Ki=1.0, Kd=0.1, setpoint=60.0)
 pid.output_limits = (0, 1)
-
-# Socket UDP
-HOST = '127.0.0.1'
-PORT = 9999
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((HOST, PORT))
@@ -42,6 +40,9 @@ sock.setblocking(False)
 
 dryer_on = True
 last_sender = None
+dryer_active_cycle = "DRYING"
+dryer_start_cycle = time.time()
+saved_temp = 0.0
 
 
 def handle_udp_commands():
@@ -50,83 +51,118 @@ def handle_udp_commands():
         data, addr = sock.recvfrom(1024)
         message = data.decode().strip()
         last_sender = addr
-        print(f"[UDP] Ricevuto: '{message}' da {addr}")
+        console.log_message(f"UDP Ricevuto: '{message}' da {addr}")
 
         if message.upper() == "POWER_OFF":
             dryer_on = False
             sock.sendto(b"DRYER_OFF", addr)
+
         elif message.upper() == "POWER_ON":
             dryer_on = True
             sock.sendto(b"DRYER_ON", addr)
+
         elif message.upper() == "GET_STATUS":
-            status = "ON" if dryer_on else "OFF"
-            set_temp = pid.setpoint
+            set_temp = pid.setpoint if dryer_on else 0
             response = {
-                "DryerStatus": status,
+                "DryerStatus": dryer_on,
                 "TemperatureSet": round(set_temp, 1),
-                "CurrentTemperature": round(read_temperature(), 1)
+                "CurrentTemperature": round(read_temperature(), 1),
+                "CycleStatus": dryer_active_cycle,
+                "CycleTimeLeftSec": int(CICLE_DURETION - (time.time() - dryer_start_cycle)) if dryer_on else 0,
             }
             sock.sendto(json.dumps(response).encode(), addr)
+
         else:
             try:
                 new_temp = float(message)
                 pid.setpoint = new_temp
-                print(f"[SOCKET] SetTemperature aggiornato a: {new_temp}°C")
+                console.log_info(f"SetTemperature aggiornato a: {new_temp}°C")
                 sock.sendto(f"SetTemperature:{new_temp}".encode(), addr)
             except ValueError:
-                print(f"[WARN] Comando sconosciuto: {message}")
+                console.log_warn(f"Comando sconosciuto: {message}")
                 sock.sendto(b"ERROR: Unknown command", addr)
     except BlockingIOError:
         pass
     except ConnectionResetError:
-        print("[WARN] Connessione UDP resettata dal client. Ignoro.")
+        console.log_warn("Connessione UDP resettata dal client. Ignoro.")
 
 
 def control_ssr(output):
     if IS_LINUX:
         if output >= 0.5:
-            print("SSR ON")
+            console.log_message("SSR ON")
             # GPIO.output(SSR_PIN, GPIO.HIGH)
         else:
-            print("SSR OFF")
+            console.log_message("SSR OFF")
             # GPIO.output(SSR_PIN, GPIO.LOW)
     else:
         if output >= 0.5:
-            print("[SIMULAZIONE] SSR ON (output PID >= 0.5)")
+            console.log_demo("SSR ON (simulazione)")
         else:
-            print("[SIMULAZIONE] SSR OFF (output PID < 0.5)")
+            console.log_demo("SSR OFF (simulazione)")
 
 
 def turn_off_ssr():
     if IS_LINUX:
-        print("SSR OFF (manuale)")
+        console.log_message("SSR OFF (manuale)")
         # GPIO.output(SSR_PIN, GPIO.LOW)
     else:
-        print("[SIMULAZIONE] SSR OFF (dryer spento)")
+        console.log_demo("SSR OFF (simulazione)")
+
+
+def update_cycle_status():
+    global dryer_active_cycle, dryer_start_cycle, saved_temp
+
+    if time.time() - dryer_start_cycle > CICLE_DURETION:
+        if dryer_active_cycle == "DRYING":
+            console.log_info("Ciclo di asciugatura completato")
+            dryer_active_cycle = "REGENERATION"
+            dryer_start_cycle = time.time()
+            console.log_info("Inizio ciclo di rigenerazione")
+            saved_temp = pid.setpoint
+            pid.setpoint = REGENERATION_TEMP
+            console.log_message("REGNERATION AIR PATH ON")
+            # GPIO.output(REGNERATIONFLOWPATH_PIN, GPIO.HIGH)
+        elif dryer_active_cycle == "REGENERATION":
+            console.log_info("Ciclo di rigenerazione completato")
+            dryer_active_cycle = "DRYING"
+            dryer_start_cycle = time.time()
+            console.log_info("Inizio ciclo di asciugatura")
+            pid.setpoint = saved_temp
+            console.log_message("REGNERATION AIR PATH OFF")
+            # GPIO.output(REGNERATIONFLOWPATH_PIN, GPIO.LOW)
 
 
 try:
     while True:
         handle_udp_commands()
         temp = read_temperature()
-        print(f"Temperatura attuale: {temp:.2f}°C")
+        console.log_info(f"Temperatura attuale: {temp:.2f}°C")
 
+        # check cycle end
         if dryer_on:
+            update_cycle_status()
+
+            console.log_info(f"Ciclo attivo: {dryer_active_cycle}")
+            console.log_info(
+                f"ETA: {int((CICLE_DURETION - (time.time() - dryer_start_cycle)) / 60)} min {int((CICLE_DURETION - (time.time() - dryer_start_cycle)) % 60)} sec")
+
             output = pid(temp)
-            print(
-                f"[PID] Output PID: {output:.2f} | SetPoint: {pid.setpoint:.2f}°C")
+            console.log_info(f"Output PID: {output:.2f}")
+            console.log_info(f"SetPoint: {pid.setpoint:.2f}°C")
             control_ssr(output)
         else:
             turn_off_ssr()
-            print("[INFO] Dryer OFF - PID sospeso")
+            console.log_info("Asciugatrice spenta - PID sospeso")
 
         time.sleep(1)
+        print("")
 
 except KeyboardInterrupt:
-    print("Interrotto dall'utente")
+    console.log_error("Interrotto dall'utente")
 
 finally:
-    print("Pulizia finale...")
+    console.log_info("Pulizia finale...")
     if IS_LINUX:
         # GPIO.cleanup()
         pass
