@@ -4,14 +4,19 @@ set -e
 
 echo "🔧 Installing system packages..."
 sudo apt-get update
-sudo apt-get install -y python3 python3-pip
+sudo apt-get install -y python3 python3-venv python3-pip
 
-# Install dependencies via pip (apt non ha pacchetti FastAPI o uvicorn)
-echo "🐍 Installing FastAPI and Uvicorn with pip..."
-sudo pip3 install fastapi uvicorn simple_pid
+echo "🐍 Creating Python virtual environment..."
+cd "$(dirname "$0")"
+python3 -m venv venv
+
+echo "📦 Activating environment and installing Python packages..."
+./venv/bin/pip install --upgrade pip
+./venv/bin/pip install fastapi uvicorn simple_pid
 
 APP_DIR=$(pwd)
-PYTHON_PATH=$(which python3)
+PYTHON=${APP_DIR}/venv/bin/python
+UVICORN=${APP_DIR}/venv/bin/uvicorn
 
 echo "📁 Creating systemd service files..."
 
