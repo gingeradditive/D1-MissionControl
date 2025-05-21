@@ -30,7 +30,7 @@ function updateGauge(currentTemp, setTemp) {
     document.getElementById('currentTemperature').textContent = currentTemp;
     document.getElementById('setTemperature').textContent = setTemp;
 
-    const tolerance = 0.05 * setTemp;
+    let tolerance = 0.05 * setTemp;
     if (setTemp === 0) {
         tolerance = Infinity
     }
