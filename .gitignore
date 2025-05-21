@@ -77,3 +77,6 @@ reload.log
 # Windows
 Thumbs.db
 ehthumbs.db
+
+# Pycache
+.pyc
