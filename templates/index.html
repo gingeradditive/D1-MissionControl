@@ -23,12 +23,54 @@
     <div class="container-fluid">
         <div class="row flex-nowrap">
             <div class="col py-3">
-                <div class="card mb-3">
-                    <div class="card-header">
+                <div class="card mb-3 text-center">
+                    <div class="card-header text-start">
                         <i class="bi bi-thermometer-half"></i> Temperature
                     </div>
-                    <span class="h1">Current <span id="currentTemperature">--</span>c°</span>
-                    <span class="h1">Set <span id="setTemperature">--</span>c°</span>
+                    <div class="card-body">
+                        <div class="gauge-wrapper position-relative mx-auto">
+                            <div class="gauge">
+                                <div class="gauge-fill" id="gaugeFill"></div>
+                                <div class="gauge-cover">
+                                    <div class="current-temp">
+                                        <span id="currentTemperature" class="display-6">--</span><small>°C</small>
+                                    </div>
+                                </div>
+                                <div class="set-point" id="setPointMarker">
+                                    <div class="set-point-point"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <strong>Set:</strong> <span id="setTemperature">--</span>°C
+                        </div>
+                    </div>
+                </div>
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <i class="bi bi-info-circle"></i> Dryer Status
+                    </div>
+                    <div class="card-body text-center">
+
+                        <div class="mb-3">
+                            <h5>Status:
+                                <span id="dryerPowerStatus" class="badge bg-secondary">OFF</span>
+                            </h5>
+                        </div>
+
+                        <div class="mb-3">
+                            <h5>Mode:
+                                <span id="dryerMode" class="badge bg-warning text-dark">--</span>
+                            </h5>
+                        </div>
+
+                        <div class="mb-3">
+                            <h5>Time Remaining:
+                                <span id="dryerTimeLeft" class="badge bg-light text-dark">-- min</span>
+                            </h5>
+                        </div>
+
+                    </div>
                 </div>
             </div>
             <div class="col py-3">
@@ -36,15 +78,23 @@
                     <div class="card-header">
                         <i class="bi bi-toggles"></i> Controls
                     </div>
-                    <div>
-                        <label>Set Temperature (°C):</label>
-                        <input type="number" id="tempInput" min="1" max="200">
-                        <button onclick="setTemperature()">Set</button>
-                    </div>
+                    <div class="card-body">
+                        <form class="row g-3 align-items-center mb-3">
+                            <div class="col-auto">
+                                <label for="tempInput" class="col-form-label">Set Temperature (°C):</label>
+                            </div>
+                            <div class="col-auto">
+                                <input type="number" id="tempInput" class="form-control" min="1" max="200" placeholder="es. 90">
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-primary" onclick="setTemperature()">Set</button>
+                            </div>
+                        </form>
 
-                    <div>
-                        <button onclick="powerOn()">Power ON</button>
-                        <button onclick="powerOff()">Power OFF</button>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button type="button" class="btn btn-success" onclick="powerOn()">Power ON</button>
+                            <button type="button" class="btn btn-danger" onclick="powerOff()">Power OFF</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -54,9 +104,9 @@
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
         <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="toast-header">
-                <i class="bi bi-x-circle"></i> 
+                <i class="bi bi-x-circle"></i>
                 <strong class="me-auto">Ginger</strong>
-                <small>11 mins ago</small>
+                <small class="taost-time">11 mins ago</small>
                 <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
             <div class="toast-body">

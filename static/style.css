@@ -83,3 +83,67 @@ body {
     color: #198754;
     z-index: 2;
 }
+
+.gauge-wrapper {
+    width: 200px;
+    height: 100px;
+    overflow: hidden;
+}
+
+.gauge {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: #eee;
+    position: relative;
+    transform: rotate(-90deg);
+}
+
+.gauge-fill {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(#0d6efd 0deg, #0d6efd 0deg, #ddd 0deg 360deg);
+    transition: background 0.5s ease-in-out;
+}
+
+.gauge-cover {
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    width: 80%;
+    height: 80%;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: rotate(90deg);
+    /* Compensa la rotazione del gauge */
+}
+
+.current-temp {
+    font-weight: bold;
+    padding-bottom: 30%;
+}
+
+.set-point {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: flex;
+    left: 0px;
+    top: 0px;
+    position: absolute;
+}
+
+.set-point-point {
+    width: 10px;
+    height: 10px;
+    background-color: #fff;
+    position: absolute;
+    left: calc(50% - 5px);
+    top: 5px;
+    border-radius: 50%;
+}
