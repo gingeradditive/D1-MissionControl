@@ -14,7 +14,7 @@ echo "📦 Activating environment and installing Python packages..."
 ./venv/bin/pip install --upgrade pip
 ./venv/bin/pip install fastapi uvicorn simple_pid
 
-APP_DIR=$(pwd)
+APP_DIR=$(pwd)/..
 PYTHON=${APP_DIR}/venv/bin/python
 UVICORN=${APP_DIR}/venv/bin/uvicorn
 
