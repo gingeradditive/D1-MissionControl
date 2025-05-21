@@ -27,31 +27,27 @@ Description=Dryer Logic Service
 After=network.target
 
 [Service]
-ExecStart=${PYTHON_PATH} ${APP_DIR}/dryer_logic.py
+ExecStart=${PYTHON} ${APP_DIR}/dryer_logic.py
 WorkingDirectory=${APP_DIR}
 Restart=always
 User=$(whoami)
-StandardOutput=journal
-StandardError=journal
 Environment=PYTHONUNBUFFERED=1
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-# DryerWeb.service (FastAPI with uvicorn)
+# DryerWeb.service
 cat <<EOF | sudo tee /etc/systemd/system/DryerWeb.service > /dev/null
 [Unit]
-Description=Dryer Web (FastAPI) Service
+Description=Dryer Web FastAPI Service
 After=network.target
 
 [Service]
-ExecStart=${PYTHON_PATH} -m uvicorn dryer_web:app --host 0.0.0.0 --port 8000
+ExecStart=${UVICORN} dryer_web:app --host 0.0.0.0 --port 8000
 WorkingDirectory=${APP_DIR}
 Restart=always
 User=$(whoami)
-StandardOutput=journal
-StandardError=journal
 Environment=PYTHONUNBUFFERED=1
 
 [Install]
