@@ -147,3 +147,7 @@ body {
     top: 5px;
     border-radius: 50%;
 }
+
+.vcs{
+    border-bottom: var(--bs-card-border-width) solid var(--bs-card-border-color);
+}

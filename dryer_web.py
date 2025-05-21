@@ -7,12 +7,16 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, JSONResponse
 import requests
 import json
+import subprocess
+import os
+import platform
 
 app = FastAPI(title="Dryer API", version="1.0")
 
 UDP_IP = "127.0.0.1"
 UDP_PORT = 9999
 BUFFER_SIZE = 1024  # dimensione buffer di risposta UDP
+IS_LINUX = platform.system() == "Linux"
 
 def send_udp_message(message: str, expect_response: bool = False):
     try:
@@ -73,3 +77,63 @@ def get_status():
     if response.startswith("error:"):
         return {"status": "error", "message": response}
     return json.loads(response)
+
+@app.get("/api/updates/check", response_class=JSONResponse)
+def check_updates():
+    try:
+        # Check Git updates
+        git_fetch = subprocess.run(["git", "fetch"], capture_output=True, text=True)
+        git_status = subprocess.run(["git", "status", "-uno"], capture_output=True, text=True)
+        git_tag = subprocess.run(["git", "describe", "--tags", "--always"], capture_output=True, text=True).stdout.strip()
+        git_updates = "Your branch is behind" in git_status.stdout
+
+        # Check system updates (Debian/Ubuntu based) only on linux 
+        if IS_LINUX:
+            apt_check = subprocess.run(["apt", "list", "--upgradable"], capture_output=True, text=True)
+            system_updates = [line for line in apt_check.stdout.split("\n")[1:] if line.strip()]
+        else:
+            system_updates = []
+        
+        return {
+            "git_updates_available": git_updates,
+            "git_updates_tag": git_tag,
+            "system_updates_available": len(system_updates) > 0,
+            "system_updates_list": system_updates
+        }
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.post("/api/updates/git", response_class=JSONResponse)
+def update_git():
+    try:
+        result = subprocess.run(["git", "pull"], capture_output=True, text=True)
+
+        if IS_LINUX:
+            #restart the services DryerLogic, DryerWeb
+            subprocess.run(["systemctl", "restart", "DryerLogic"])
+            subprocess.run(["systemctl", "restart", "DryerWeb"])
+        
+        return {
+            "success": result.returncode == 0,
+            "stdout": result.stdout,
+            "stderr": result.stderr
+        }
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.post("/api/updates/system", response_class=JSONResponse)
+def update_system():
+    try:
+        # Update and upgrade system (Debian/Ubuntu only!)
+        update = subprocess.run(["apt", "update"], capture_output=True, text=True)
+        upgrade = subprocess.run(["apt", "upgrade", "-y"], capture_output=True, text=True)
+        return {
+            "update_stdout": update.stdout,
+            "upgrade_stdout": upgrade.stdout,
+            "upgrade_stderr": upgrade.stderr,
+            "success": upgrade.returncode == 0
+        }
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})

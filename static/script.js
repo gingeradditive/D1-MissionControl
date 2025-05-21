@@ -1,5 +1,5 @@
 $(document).ready(function () {
-    $.get("/api/discovery-check", function (data) {
+    $.get("/api/g1-check", function (data) {
         if (data.reachable) {
             $("#BackToMainsail").show();  // o rimuovi classe .d-none
         } else {
@@ -13,6 +13,11 @@ $(document).ready(function () {
     }, 5000);
 
     updateStatus();
+    refreshVcs();
+
+    $("#refreshVcs").click(function () {
+        refreshVcs();
+    });
 });
 
 //----------------------------------------------
@@ -78,6 +83,7 @@ function updateDryerStatus(powerOn, mode, minutesLeft) {
     // Tempo rimanente
     timeLeft.textContent = `${minutesLeft} min`;
 }
+
 //---------------------------------------------
 
 const baseUrl = "/api/";
@@ -134,7 +140,87 @@ function updateStatus() {
         updateGauge(data.CurrentTemperature, data.TemperatureSet)
 
 
-        updateDryerStatus(data.DryerStatus, data.CycleStatus, Math.ceil(data.CycleTimeLeftSec/60))
+        updateDryerStatus(data.DryerStatus, data.CycleStatus, Math.ceil(data.CycleTimeLeftSec / 60))
         // $("#dryerStatus").text(data.DryerStatus);
+    });
+}
+
+function refreshVcs() {
+    $.get("/api/updates/check", function (data) {
+        if (data.status == "error") {
+            if ($("#liveToast").hasClass("show")) {
+                return;
+            }
+
+            var toastEl = $('#liveToast');
+            var toast = new bootstrap.Toast(toastEl[0], {
+                autohide: false
+            });
+
+            $("#liveToast .toast-body").text(data.message);
+            $("#liveToast .me-auto").text("ERROR");
+            $("#liveToast .taost-time").text(new Date().toLocaleTimeString());
+            toast.show();
+            return;
+        }
+
+        $("#vcs-GingerDryer .repoVersion").text(data.git_updates_tag);
+        if (data.git_updates_available) {
+            $("#vsc-GingerDryer .btnUpdate").removeClass("btn-outline-secondary").addClass("btn-danger").prop("disabled", false);
+        }
+        else {
+            $("#vsc-GingerDryer .btnUpdate").removeClass("btn-danger").addClass("btn-outline-secondary").prop("disabled", true);
+        }
+
+        // #vsc-system
+        if (data.system_updates_available) {
+            $("#vsc-system .btnUpdate").removeClass("btn-outline-secondary").addClass("btn-danger").prop("disabled", false);
+        }
+        else {
+            $("#vsc-system .btnUpdate").removeClass("btn-danger").addClass("btn-outline-secondary").prop("disabled", true);
+        }
+    });
+}
+
+function updateGingerDryer() {
+    $.post("/api/updates/git", function (data) {
+        if (data.status == "error") {
+            if ($("#liveToast").hasClass("show")) {
+                return;
+            }
+            var toastEl = $('#liveToast');
+            var toast = new bootstrap.Toast(toastEl[0], {
+                autohide: false
+            });
+            $("#liveToast .toast-body").text(data.message);
+            $("#liveToast .me-auto").text("ERROR");
+            $("#liveToast .taost-time").text(new Date().toLocaleTimeString());
+            toast.show();
+            return;
+        }
+        setTimeout(function () {
+            window.location.reload(1);
+        }, 2000);
+        refreshVcs();
+    });
+}
+
+function updateSystem() {
+    $.post("/api/updates/system", function (data) {
+        if (data.status == "error") {
+            if ($("#liveToast").hasClass("show")) {
+                return;
+            }
+            var toastEl = $('#liveToast');
+            var toast = new bootstrap.Toast(toastEl[0], {
+                autohide: false
+            });
+            $("#liveToast .toast-body").text(data.message);
+            $("#liveToast .me-auto").text("ERROR");
+            $("#liveToast .taost-time").text(new Date().toLocaleTimeString());
+            toast.show();
+            return;
+        }
+        refreshVcs();
     });
 }

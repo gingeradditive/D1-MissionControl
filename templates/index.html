@@ -23,6 +23,7 @@
     <div class="container-fluid">
         <div class="row flex-nowrap">
             <div class="col py-3">
+
                 <div class="card mb-3 text-center">
                     <div class="card-header text-start">
                         <i class="bi bi-thermometer-half"></i> Temperature
@@ -46,6 +47,7 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="card mb-3">
                     <div class="card-header">
                         <i class="bi bi-info-circle"></i> Dryer Status
@@ -72,8 +74,10 @@
 
                     </div>
                 </div>
+
             </div>
             <div class="col py-3">
+
                 <div class="card mb-3">
                     <div class="card-header">
                         <i class="bi bi-toggles"></i> Controls
@@ -94,6 +98,39 @@
                         <div class="d-flex gap-2 justify-content-center">
                             <button type="button" class="btn btn-success" onclick="powerOn()">Power ON</button>
                             <button type="button" class="btn btn-danger" onclick="powerOff()">Power OFF</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <i class="bi bi-arrow-clockwise"></i> Update Manager
+                        <a class="float-end" href="#" id="refreshVcs">
+                            <i class="bi bi-arrow-clockwise text-danger fw-bold"></i>
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="vcs row pb-3" id="vcs-GingerDryer">
+                            <div class="col">
+                                <span class="fw-bold repoName">GingerDryer</span><br>
+                                <span class="repoVersion">-</span>
+                            </div>
+                            <div class="col text-end">
+                                <button type="button" class="btn btn-outline-secondary btnUpdate" disabled id="updateGingerDryer" onclick="updateGingerDryer()">
+                                    <i class="bi bi-check"></i> UP-TO-DATE
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row pt-3" id="vsc-system">
+                            <div class="col">
+                                <span class="fw-bold repoName">System</span><br>
+                                <span class="repoVersion">OS-Packages</span>
+                            </div>
+                            <div class="col text-end">
+                                <button type="button" class="btn btn-outline-secondary" disabled id="updateGingerDryer" onclick="updateSystem()">
+                                    <i class="bi bi-check"></i> UP-TO-DATE
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
