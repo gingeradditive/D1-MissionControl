@@ -16,6 +16,8 @@ TEMP_HISTORY_MINUTES = 300  # 5 ore
 SECOND_BUFFER = []
 MINUTE_AVERAGES = deque(maxlen=TEMP_HISTORY_MINUTES)
 BUFFER_SIZE = 1024*16  # dimensione buffer di risposta UDP
+UNIX_SOCKET_PATH = "/tmp/dryer_socket"
+
 last_minute_time = time.time()
 
 if IS_LINUX:
@@ -40,10 +42,20 @@ def read_temperature():
 pid = PID(Kp=2.0, Ki=1.0, Kd=0.1, setpoint=60.0)
 pid.output_limits = (0, 1)
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.bind((HOST, PORT))
+if IS_LINUX:
+    # Rimuove il file socket se esiste
+    if os.path.exists(UNIX_SOCKET_PATH):
+        os.remove(UNIX_SOCKET_PATH)
+
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+    sock.bind(UNIX_SOCKET_PATH)
+    console.log_info(f"Socket UNIX in ascolto su {UNIX_SOCKET_PATH}")
+else:
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind((HOST, PORT))
+    console.log_info(f"Socket UDP in ascolto su {HOST}:{PORT}")
+
 sock.setblocking(False)
-sock.settimeout(5.0)
 
 dryer_on = True
 last_sender = None

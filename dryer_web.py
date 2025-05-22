@@ -17,21 +17,30 @@ UDP_IP = "127.0.0.1"
 UDP_PORT = 9999
 BUFFER_SIZE = 1024*16  # dimensione buffer di risposta UDP
 IS_LINUX = platform.system() == "Linux"
+UNIX_SOCKET_PATH = "/tmp/dryer_socket"
 
-def send_udp_message(message: str, expect_response: bool = False):
+def send_message(message: str, expect_response: bool = False):
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.settimeout(5.0)
-        sock.sendto(message.encode(), (UDP_IP, UDP_PORT))
+        if IS_LINUX:
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+            sock.settimeout(5.0)
+            sock.connect(UNIX_SOCKET_PATH)
+        else:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.settimeout(5.0)
+            sock.connect((UDP_IP, UDP_PORT))
+
+        sock.send(message.encode())
+
         if expect_response:
-            response, _ = sock.recvfrom(BUFFER_SIZE)
+            response = sock.recv(BUFFER_SIZE)
             return response.decode()
+
         return "ok"
     except Exception as e:
         return f"error: {str(e)}"
     finally:
         sock.close()
-
 class SetTemperatureRequest(BaseModel):
     value: float = Query(..., gt=0, lt=200, description="Temperatura desiderata in °C")
 
@@ -58,7 +67,7 @@ def check_g1():
 
 @app.post("/api/setTemperature")
 def set_temperature(data: SetTemperatureRequest):
-    response = send_udp_message(str(data.value))
+    response = send_message(str(data.value))
     if response == "ok":
         return {"status": "ok", "setTemperature": data.value}
     return {"status": "error", "message": response}
@@ -66,14 +75,14 @@ def set_temperature(data: SetTemperatureRequest):
 @app.post("/api/power")
 def power_dryer(data: PowerRequest):
     command = "POWER_ON" if data.on else "POWER_OFF"
-    response = send_udp_message(command)
+    response = send_message(command)
     if response == "ok":
         return {"status": "ok", "power": "on" if data.on else "off"}
     return {"status": "error", "message": response}
 
 @app.get("/api/status")
 def get_status():
-    response = send_udp_message("GET_STATUS", expect_response=True)
+    response = send_message("GET_STATUS", expect_response=True)
     if response.startswith("error:"):
         return {"status": "error", "message": response}
     return json.loads(response)
@@ -144,7 +153,7 @@ def get_history(from_ts: int = Query(0, alias="from")):
     if from_ts > 0:
         cmd += f" FROM={from_ts}"
 
-    response = send_udp_message(cmd, expect_response=True)
+    response = send_message(cmd, expect_response=True)
     try:
         data = json.loads(response)
         return JSONResponse(content=data)
