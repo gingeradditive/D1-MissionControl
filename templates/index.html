@@ -75,6 +75,27 @@
                     </div>
                 </div>
 
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <i class="bi bi-toggles"></i> Controls
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h5 class="mb-0">Temperature history</h5>
+                            <select id="rangeSelector" class="form-select w-auto">
+                                <option value="1" selected>Last 1 hour</option>
+                                <option value="3">Last 3 hours</option>
+                                <option value="5">Last 5 hours</option>
+                            </select>
+                        </div>
+                        <div class="card-body">
+                            <div style="position:relative; height:300px;">
+                                <canvas id="temperatureChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
             <div class="col py-3">
 
@@ -88,7 +109,7 @@
                                 <label for="tempInput" class="col-form-label">Set Temperature (°C):</label>
                             </div>
                             <div class="col-auto">
-                                <input type="number" id="tempInput" class="form-control" min="1" max="200" placeholder="es. 90">
+                                <input type="number" id="tempInput" class="form-control" min="1" max="150" placeholder="es. 90">
                             </div>
                             <div class="col-auto">
                                 <button type="button" class="btn btn-primary" onclick="setTemperature()">Set</button>
@@ -153,8 +174,10 @@
     </div>
 
     <script src="/static/bootstrap.bundle.min.js"></script>
+    <script src="/static/chart.js"></script>
     <script src="/static/jquery.js"></script>
     <script src="/static/script.js"></script>
+    <script src="/static/temp-graph.js"></script>
 </body>
 
 </html>

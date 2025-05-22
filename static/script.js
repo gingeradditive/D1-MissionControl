@@ -10,7 +10,7 @@ $(document).ready(function () {
     //   Run function every 5 seconds
     setInterval(function () {
         updateStatus();
-    }, 5000);
+    }, 2000);
 
     updateStatus();
     refreshVcs();

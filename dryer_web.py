@@ -15,13 +15,13 @@ app = FastAPI(title="Dryer API", version="1.0")
 
 UDP_IP = "127.0.0.1"
 UDP_PORT = 9999
-BUFFER_SIZE = 1024  # dimensione buffer di risposta UDP
+BUFFER_SIZE = 1024*16  # dimensione buffer di risposta UDP
 IS_LINUX = platform.system() == "Linux"
 
 def send_udp_message(message: str, expect_response: bool = False):
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.settimeout(2.0)
+        sock.settimeout(5.0)
         sock.sendto(message.encode(), (UDP_IP, UDP_PORT))
         if expect_response:
             response, _ = sock.recvfrom(BUFFER_SIZE)
@@ -137,3 +137,16 @@ def update_system():
         }
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+    
+@app.get("/history", response_class=JSONResponse)
+def get_history(from_ts: int = Query(0, alias="from")):
+    cmd = "GET_HISTORY"
+    if from_ts > 0:
+        cmd += f" FROM={from_ts}"
+
+    response = send_udp_message(cmd, expect_response=True)
+    try:
+        data = json.loads(response)
+        return JSONResponse(content=data)
+    except json.JSONDecodeError:
+        return JSONResponse(content={"error": "Malformed response from dryer"}, status_code=500)

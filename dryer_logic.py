@@ -5,12 +5,18 @@ import platform
 from simple_pid import PID
 import json
 import modules.consoleEnhancer as console
+from collections import deque
 
 IS_LINUX = platform.system() == "Linux"
 HOST = '127.0.0.1'
 PORT = 9999
-CICLE_DURETION = 60 * 1  # sec*mmin
+CICLE_DURETION = 60 * 20  # sec*mmin
 REGENERATION_TEMP = 80.0
+TEMP_HISTORY_MINUTES = 300  # 5 ore
+SECOND_BUFFER = []
+MINUTE_AVERAGES = deque(maxlen=TEMP_HISTORY_MINUTES)
+BUFFER_SIZE = 1024*16  # dimensione buffer di risposta UDP
+last_minute_time = time.time()
 
 if IS_LINUX:
     console.log_info("Ambiente Linux rilevato: modalità PRODUZIONE")
@@ -37,6 +43,7 @@ pid.output_limits = (0, 1)
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((HOST, PORT))
 sock.setblocking(False)
+sock.settimeout(5.0)
 
 dryer_on = True
 last_sender = None
@@ -48,7 +55,7 @@ saved_temp = 0.0
 def handle_udp_commands():
     global dryer_on, last_sender
     try:
-        data, addr = sock.recvfrom(1024)
+        data, addr = sock.recvfrom(BUFFER_SIZE)
         message = data.decode().strip()
         last_sender = addr
         console.log_message(f"UDP Ricevuto: '{message}' da {addr}")
@@ -71,6 +78,32 @@ def handle_udp_commands():
                 "CycleTimeLeftSec": int(CICLE_DURETION - (time.time() - dryer_start_cycle)) if dryer_on else 0,
             }
             sock.sendto(json.dumps(response).encode(), addr)
+
+        elif message.upper().startswith("GET_HISTORY"):
+            try:
+                from_timestamp = 0
+                if "FROM=" in message.upper():
+                    parts = message.upper().split("FROM=")
+                    if len(parts) > 1:
+                        from_timestamp = int(parts[1].strip())
+
+                filtered_history = [
+                    {"timestamp": ts, "temperature": round(avg, 2)}
+                    for ts, avg in MINUTE_AVERAGES
+                    if ts >= from_timestamp
+                ]
+
+                response = {
+                    "TemperatureSet": round(pid.setpoint, 1),
+                    "CurrentTemperature": round(read_temperature(), 1),
+                    "History": filtered_history
+                }
+
+                sock.sendto(json.dumps(response).encode(), addr)
+
+            except Exception as e:
+                console.log_error(f"Errore in GET_HISTORY: {e}")
+                sock.sendto(b"ERROR: Invalid GET_HISTORY format", addr)
 
         else:
             try:
@@ -132,11 +165,24 @@ def update_cycle_status():
             console.log_message("REGNERATION AIR PATH OFF")
             # GPIO.output(REGNERATIONFLOWPATH_PIN, GPIO.LOW)
 
+for i in range(TEMP_HISTORY_MINUTES):
+    timeStamp = int(time.time()) - ((TEMP_HISTORY_MINUTES - i) * 60)
+    MINUTE_AVERAGES.append((timeStamp, 0.0))
 
 try:
     while True:
         handle_udp_commands()
         temp = read_temperature()
+
+        SECOND_BUFFER.append(temp)
+        now = time.time()
+        if now - last_minute_time >= 60:
+            if SECOND_BUFFER:
+                avg_minute = sum(SECOND_BUFFER) / len(SECOND_BUFFER)
+                MINUTE_AVERAGES.append((int(now), avg_minute))  # salva anche timestamp
+                SECOND_BUFFER.clear()
+            last_minute_time = now
+
         console.log_info(f"Temperatura attuale: {temp:.2f}°C")
 
         # check cycle end
