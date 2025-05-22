@@ -77,21 +77,20 @@
 
                 <div class="card mb-3">
                     <div class="card-header">
-                        <i class="bi bi-toggles"></i> Controls
+                        <i class="bi bi-graph-up-arrow"></i> Temperature Chart
                     </div>
                     <div class="card-body">
-                        <div class="d-flex justify-content-between mb-3">
-                            <h5 class="mb-0">Temperature history</h5>
+                        <div class="card-body">
+                            <div style="position:relative; height:300px;">
+                                <canvas id="temperatureChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3 float-end">
                             <select id="rangeSelector" class="form-select w-auto">
                                 <option value="1" selected>Last 1 hour</option>
                                 <option value="3">Last 3 hours</option>
                                 <option value="5">Last 5 hours</option>
                             </select>
-                        </div>
-                        <div class="card-body">
-                            <div style="position:relative; height:300px;">
-                                <canvas id="temperatureChart"></canvas>
-                            </div>
                         </div>
                     </div>
                 </div>
