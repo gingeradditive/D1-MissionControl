@@ -4,6 +4,8 @@ import TemperatureDisplay from './components/TemperatureDisplay';
 import Controls from './components/Controls';
 import Footer from './components/Footer';
 import CheckLight from './components/CheckLight';
+import DateTimeDisplay from './components/DateTimeDisplay';
+
 import './App.css';
 
 export default function App() {
@@ -15,6 +17,7 @@ export default function App() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        position: 'relative', // importante per posizionamento figlio
       }}
     >
       <Container
@@ -25,6 +28,7 @@ export default function App() {
           borderRadius: 4,
           p: 3,
           boxShadow: 2,
+          zIndex: 1, // metti sopra l'immagine
         }}
       >
         <Header />
@@ -38,6 +42,22 @@ export default function App() {
         </Box>
         <Footer />
       </Container>
+      <Box
+        component="img"
+        src="/Logo_ginger.svg"
+        alt="Logo Ginger"
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          width: 150,
+          height: 'auto',
+          opacity: 0.7, // un po' trasparente se vuoi
+          zIndex: 0, // sotto il container
+          pointerEvents: 'none', // per non interferire con i click
+        }}
+      />
+      <DateTimeDisplay />
     </Box>
   );
 }
