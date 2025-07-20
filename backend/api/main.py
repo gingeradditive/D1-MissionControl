@@ -42,7 +42,7 @@ def get_status(mode: str = Query(default="1h", enum=["1m", "1h", "12h"])):
     return {
         "setpoint": dryer.set_temp,
         "current_temp": round(temp, 2),
-        "avg_humidity": round(hum, 2),
+        "current_humidity": round(hum, 2),
         "heater_ratio": round(heater_ratio, 2),
         "mode": mode,
         "history": [
@@ -71,3 +71,4 @@ def on_shutdown():
     running = False
     thread.join()
     dryer.shutdown()
+
