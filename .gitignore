@@ -1,82 +1,35 @@
-# Byte-compiled / optimized / DLL files
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+
+# Python
 __pycache__/
 *.py[cod]
-*$py.class
-
-# Cython debug symbols
-cython_debug/
-
-# Virtual environments
-.env/
-.venv/
+.Python
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
-
-# pipenv, poetry
-Pipfile.lock
-poetry.lock
-
-# pyenv
-.python-version
-
-# VS Code
-.vscode/
-
-# PyCharm
-.idea/
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# Pytest
-.pytest_cache/
-
-# Coverage reports
-htmlcov/
-.coverage
-coverage.xml
-*.cover
-*.py,cover
-
-# PyInstaller
-*.spec
-dist/
-build/
-
-# Logs
-*.log
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# Local .env files (like dotenv or similar)
-*.env
-.env.*
-
-# FastAPI specific (if using uvicorn logs or reload)
-reload.log
-
-# Database
-*.db
-*.sqlite3
-
-# VS Code profiling
-*.code-workspace
-
-# macOS
-.DS_Store
-
-# Windows
-Thumbs.db
-ehthumbs.db
-
-# Pycache
-.pyc

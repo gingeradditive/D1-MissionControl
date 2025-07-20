@@ -100,10 +100,7 @@ try:
             temp_history.append((now, temp, heater_status))
 
             # Log ogni 10s
-            if time.time() - log_timer >= 10:
-                log_to_file(now_str, temp, hum, heater_status)
-                log_timer = time.time()
-
+            log_to_file(now_str, temp, hum, heater_status)
             status_panel, graph_panel = make_interface(temp, hum, heater_status)
 
             layout = Table.grid(expand=True)
