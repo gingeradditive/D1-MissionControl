@@ -5,6 +5,7 @@ import Controls from './components/Controls';
 import Footer from './components/Footer';
 import CheckLight from './components/CheckLight';
 import DateTimeDisplay from './components/DateTimeDisplay';
+import BackButton from './components/BackButton';
 
 import './App.css';
 
@@ -57,6 +58,7 @@ export default function App() {
           pointerEvents: 'none', // per non interferire con i click
         }}
       />
+      <BackButton onClick={() => window.location.href = 'https://g1os.local'} />
       <DateTimeDisplay />
     </Box>
   );
