@@ -1,7 +1,20 @@
 import { useEffect, useState, useRef } from "react";
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import axios from "axios";
 import { Line } from "react-chartjs-2";
 import "chart.js/auto";
+
+const lightTheme = createTheme({
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#d72e28', // tuo colore rosso personalizzato
+    },
+    background: {
+      default: '#fff',
+    },
+  },
+});
 
 const PRIMARY_COLOR = "#d72e28";
 
@@ -133,153 +146,155 @@ function App() {
   };
 
   return (
-    <div
-      style={{
-        backgroundColor: "white",
-        color: "#333",
-        minHeight: "100vh",
-        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-        padding: 20,
-        width: "calc(100vw - 55px)",      // tutta la larghezza finestra
-        margin: 0,
-      }}
-    >
-      <h1 style={{ color: PRIMARY_COLOR, marginBottom: 20 }}>Dryer Dashboard</h1>
-
-      {/* Setpoint input */}
+    <ThemeProvider theme={lightTheme}>
       <div
         style={{
-          marginBottom: 20,
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
+          backgroundColor: "white",
+          color: "#333",
+          minHeight: "100vh",
+          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+          padding: 20,
+          width: "calc(100vw - 55px)",      // tutta la larghezza finestra
+          margin: 0,
         }}
       >
-        <label htmlFor="setpoint-input" style={{ fontWeight: "bold" }}>
-          Setpoint (°C):
-        </label>
-        <input
-          id="setpoint-input"
-          type="number"
-          min={0}
-          max={100}
-          step={0.1}
-          value={setpointInput}
-          onChange={(e) => setSetpointInput(e.target.value)}
-          style={{ padding: "6px 10px", flex: "1 1 auto", fontSize: 16 }}
-        />
-        <button
-          onClick={handleSetpointSubmit}
-          disabled={loadingSetpoint}
+        <h1 style={{ color: PRIMARY_COLOR, marginBottom: 20 }}>Dryer Dashboard</h1>
+
+        {/* Setpoint input */}
+        <div
           style={{
-            backgroundColor: PRIMARY_COLOR,
-            border: "none",
-            color: "white",
-            padding: "8px 16px",
-            cursor: loadingSetpoint ? "wait" : "pointer",
-            fontWeight: "bold",
-            borderRadius: 4,
+            marginBottom: 20,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
           }}
         >
-          {loadingSetpoint ? "Saving..." : "Set"}
-        </button>
-      </div>
-
-      {/* Mode selector and toggle drying */}
-      <div
-        style={{
-          marginBottom: 30,
-          display: "flex",
-          alignItems: "center",
-          gap: 20,
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <label htmlFor="mode-select" style={{ fontWeight: "bold" }}>
-            Select Mode:
+          <label htmlFor="setpoint-input" style={{ fontWeight: "bold" }}>
+            Setpoint (°C):
           </label>
-          <select
-            id="mode-select"
-            value={mode}
-            onChange={(e) => setMode(e.target.value)}
-            style={{ marginLeft: 10, padding: "6px 10px", fontSize: 16 }}
-          >
-            <option value="1m">Last Minute (raw)</option>
-            <option value="1h">Last Hour (1 min average)</option>
-            <option value="12h">Last 12 Hours (30 min average)</option>
-          </select>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <label htmlFor="drying-toggle" style={{ fontWeight: "bold" }}>
-            Drying Cycle:
-          </label>
+          <input
+            id="setpoint-input"
+            type="number"
+            min={0}
+            max={100}
+            step={0.1}
+            value={setpointInput}
+            onChange={(e) => setSetpointInput(e.target.value)}
+            style={{ padding: "6px 10px", flex: "1 1 auto", fontSize: 16 }}
+          />
           <button
-            id="drying-toggle"
-            onClick={handleToggleDrying}
-            disabled={loadingToggle}
+            onClick={handleSetpointSubmit}
+            disabled={loadingSetpoint}
             style={{
-              backgroundColor: dryingOn ? PRIMARY_COLOR : "#ccc",
-              color: dryingOn ? "white" : "#666",
+              backgroundColor: PRIMARY_COLOR,
               border: "none",
-              padding: "8px 20px",
-              cursor: loadingToggle ? "wait" : "pointer",
-              borderRadius: 20,
+              color: "white",
+              padding: "8px 16px",
+              cursor: loadingSetpoint ? "wait" : "pointer",
               fontWeight: "bold",
-              userSelect: "none",
+              borderRadius: 4,
             }}
-            aria-pressed={dryingOn}
           >
-            {loadingToggle ? "Updating..." : dryingOn ? "ON 🔥" : "OFF ❄️"}
+            {loadingSetpoint ? "Saving..." : "Set"}
           </button>
         </div>
-      </div>
 
-      {/* KPI */}
-      <div
-        style={{
-          display: "flex",
-          gap: 40,
-          marginBottom: 30,
-          flexWrap: "wrap",
-          fontSize: 18,
-        }}
-      >
-        <div>
-          <div style={{ fontWeight: "bold", marginBottom: 5, color: PRIMARY_COLOR }}>
-            Current Temperature
+        {/* Mode selector and toggle drying */}
+        <div
+          style={{
+            marginBottom: 30,
+            display: "flex",
+            alignItems: "center",
+            gap: 20,
+            flexWrap: "wrap",
+          }}
+        >
+          <div>
+            <label htmlFor="mode-select" style={{ fontWeight: "bold" }}>
+              Select Mode:
+            </label>
+            <select
+              id="mode-select"
+              value={mode}
+              onChange={(e) => setMode(e.target.value)}
+              style={{ marginLeft: 10, padding: "6px 10px", fontSize: 16 }}
+            >
+              <option value="1m">Last Minute (raw)</option>
+              <option value="1h">Last Hour (1 min average)</option>
+              <option value="12h">Last 12 Hours (30 min average)</option>
+            </select>
           </div>
-          <div>{status.current_temp.toFixed(2)} °C</div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <label htmlFor="drying-toggle" style={{ fontWeight: "bold" }}>
+              Drying Cycle:
+            </label>
+            <button
+              id="drying-toggle"
+              onClick={handleToggleDrying}
+              disabled={loadingToggle}
+              style={{
+                backgroundColor: dryingOn ? PRIMARY_COLOR : "#ccc",
+                color: dryingOn ? "white" : "#666",
+                border: "none",
+                padding: "8px 20px",
+                cursor: loadingToggle ? "wait" : "pointer",
+                borderRadius: 20,
+                fontWeight: "bold",
+                userSelect: "none",
+              }}
+              aria-pressed={dryingOn}
+            >
+              {loadingToggle ? "Updating..." : dryingOn ? "ON 🔥" : "OFF ❄️"}
+            </button>
+          </div>
         </div>
 
-        <div>
-          <div style={{ fontWeight: "bold", marginBottom: 5, color: PRIMARY_COLOR }}>
-            Current Humidity
+        {/* KPI */}
+        <div
+          style={{
+            display: "flex",
+            gap: 40,
+            marginBottom: 30,
+            flexWrap: "wrap",
+            fontSize: 18,
+          }}
+        >
+          <div>
+            <div style={{ fontWeight: "bold", marginBottom: 5, color: PRIMARY_COLOR }}>
+              Current Temperature
+            </div>
+            <div>{status.current_temp.toFixed(2)} °C</div>
           </div>
-          <div>{status.current_humidity.toFixed(2)} %</div>
+
+          <div>
+            <div style={{ fontWeight: "bold", marginBottom: 5, color: PRIMARY_COLOR }}>
+              Current Humidity
+            </div>
+            <div>{status.current_humidity.toFixed(2)} %</div>
+          </div>
+
+          <div>
+            <div style={{ fontWeight: "bold", marginBottom: 5, color: PRIMARY_COLOR }}>
+              Heater Status
+            </div>
+            <div>{dryingOn ? (status.heater ? "ON 🔥" : "OFF ❄️") : "OFF ❄️"}</div>
+          </div>
         </div>
 
+        {/* Grafico Temperatura */}
+        <div style={{ marginBottom: 40 }}>
+          <h2 style={{ color: PRIMARY_COLOR, marginBottom: 10 }}>Temperature</h2>
+          <Line data={tempChartData} />
+        </div>
+
+        {/* Grafico Umidità */}
         <div>
-          <div style={{ fontWeight: "bold", marginBottom: 5, color: PRIMARY_COLOR }}>
-            Heater Status
-          </div>
-          <div>{dryingOn ? (status.heater ? "ON 🔥" : "OFF ❄️") : "OFF ❄️"}</div>
+          <h2 style={{ color: PRIMARY_COLOR, marginBottom: 10 }}>Humidity</h2>
+          <Line data={humChartData} />
         </div>
       </div>
-
-      {/* Grafico Temperatura */}
-      <div style={{ marginBottom: 40 }}>
-        <h2 style={{ color: PRIMARY_COLOR, marginBottom: 10 }}>Temperature</h2>
-        <Line data={tempChartData} />
-      </div>
-
-      {/* Grafico Umidità */}
-      <div>
-        <h2 style={{ color: PRIMARY_COLOR, marginBottom: 10 }}>Humidity</h2>
-        <Line data={humChartData} />
-      </div>
-    </div>
+    </ThemeProvider>
   );
 }
 
