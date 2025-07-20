@@ -2,7 +2,6 @@ import { Box, Container } from '@mui/material';
 import Header from './components/Header';
 import TemperatureDisplay from './components/TemperatureDisplay';
 import Controls from './components/Controls';
-import IndoorTemp from './components/IndoorTemp';
 import Footer from './components/Footer';
 import CheckLight from './components/CheckLight';
 import './App.css';
@@ -12,7 +11,7 @@ export default function App() {
     <Box
       sx={{
         backgroundColor: '#f5f5f5',
-        minHeight: '100vh',
+        minHeight: '90vh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -37,7 +36,6 @@ export default function App() {
         <Box display="flex" justifyContent="end" alignItems="center" mx={4}>
           <CheckLight />
         </Box>
-        <IndoorTemp />
         <Footer />
       </Container>
     </Box>

@@ -1,16 +1,20 @@
-import { Box, IconButton } from '@mui/material';
+import { Box, Tooltip } from '@mui/material';
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import AirIcon from '@mui/icons-material/Air';
+import AlarmOffIcon from '@mui/icons-material/AlarmOff';
 
 export default function CheckLight() {
   return (
     <Box display="flex" justifyContent="end" alignItems="center">
-      <IconButton sx={{ color: 'red' }}>
-        <LocalFireDepartmentIcon fontSize='medium'/>
-      </IconButton>
-      <IconButton sx={{ color: 'lightblue' }}>
-        <AirIcon fontSize='medium'/>
-      </IconButton>
+        <Tooltip title="No timer set">
+            <AlarmOffIcon fontSize='medium' sx={{ color: '#cccccc', marginRight: 2 }}/>
+        </Tooltip>
+        <Tooltip title="Heater ON">
+            <LocalFireDepartmentIcon fontSize='medium' sx={{ color: 'red', marginRight: 2  }}/>
+        </Tooltip>
+        <Tooltip title="Fan ON">
+            <AirIcon fontSize='medium' sx={{ color: 'lightblue' }}/>
+        </Tooltip>
     </Box>
   );
 }
