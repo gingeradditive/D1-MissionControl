@@ -25,8 +25,28 @@ export default function App() {
         .catch(err => console.error("Errore nel fetch /status:", err));
     }, 1000); //
 
-    return () => clearInterval(interval); // pulizia all'unmount
+    return () => clearInterval(interval);
   }, []);
+
+  function handleIncrease() {
+     let newSet = status.setpoint + 5;
+     if (newSet > 100)
+       newSet = 100;
+     api.setPoint(newSet);
+     api.getStatus()
+        .then(res => setStatus(res.data))
+        .catch(err => console.error("Errore nel fetch /status:", err));
+  }
+  
+  function handleDecrease() {
+      let newSet = status.setpoint - 5;
+      if (newSet < 0)
+        newSet = 0;
+      api.setPoint(newSet);
+      api.getStatus()
+        .then(res => setStatus(res.data))
+        .catch(err => console.error("Errore nel fetch /status:", err));
+  }
 
   return (
     <Box
@@ -52,14 +72,14 @@ export default function App() {
       >
         <Header />
         <Box display="flex" justifyContent="space-evenly" alignItems="center" my={3}>
-          <Controls direction="down" />
+          <Controls direction="down" onClick={handleDecrease} />
           <TemperatureDisplay
             currentTemp={status.current_temp}
             setpoint={status.setpoint}
             humidity={status.current_humidity}
             heater={status.heater}
           />
-          <Controls direction="up" />
+          <Controls direction="up" onClick={handleIncrease} />
         </Box>
         <Box display="flex" justifyContent="end" alignItems="center" mx={4}>
           <CheckLight

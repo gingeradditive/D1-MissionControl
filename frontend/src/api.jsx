@@ -12,5 +12,5 @@ const apiClient = axios.create({
 export const api = {
   getStatus: () => apiClient.get("/status"),
   getHistory: (mode) => apiClient.get(`/history/${mode}`),
-  setPoint: (data) => apiClient.post(`/setpoint/${value}`),
+  setPoint: (value) => apiClient.post(`/setpoint/${value}`),
 };
