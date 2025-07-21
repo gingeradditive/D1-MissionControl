@@ -21,6 +21,10 @@ class DryerController:
         self.temp_history = deque(maxlen=43200)  # 12h a 1Hz
         self.log_timer = time.time()
 
+        # DEMO VALUES 
+        self.prev_temp = random.uniform(20, 30)
+        self.prev_hum = random.uniform(30, 50)
+
         self.log_file = f"logs/temperature_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         with open(self.log_file, "w") as f:
             f.write("timestamp,temperature,humidity,heater_on,setpoint\n")
@@ -39,8 +43,15 @@ class DryerController:
         if IS_RASPBERRY:
             temp, hum = self.sht.measurements
         else:
-            temp = random.uniform(20, 60)
-            hum = random.uniform(20, 80)
+            # Variazione lenta
+            self.prev_temp += random.uniform(-0.5, 0.5)
+            self.prev_temp = max(15, min(70, self.prev_temp))  # Limita l'intervallo
+
+            self.prev_hum += random.uniform(-1, 1)
+            self.prev_hum = max(10, min(90, self.prev_hum))
+
+            temp = self.prev_temp
+            hum = self.prev_hum
 
         now = datetime.now()
         self.temp_history.append((now, temp, hum, self.heater_status))

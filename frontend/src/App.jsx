@@ -1,53 +1,11 @@
-import { useEffect, useState } from "react";
 import { Box, Container } from '@mui/material';
 import Header from './components/Header';
-import TemperatureDisplay from './components/TemperatureDisplay';
-import Controls from './components/Controls';
-import Footer from './components/Footer';
-import CheckLight from './components/CheckLight';
+import StatusManager from './components/StatusManager';
 import DateTimeDisplay from './components/DateTimeDisplay';
 import BackButton from './components/BackButton';
-import { api } from "./api";
 import './App.css';
 
 export default function App() {
-  const [status, setStatus] = useState({
-    current_temp: null,
-    setpoint: null,
-    current_humidity: null,
-    heater: null,
-  });
-
-  useEffect(() => {
-    let interval = setInterval(() => {
-      api.getStatus()
-        .then(res => setStatus(res.data))
-        .catch(err => console.error("Errore nel fetch /status:", err));
-    }, 1000); //
-
-    return () => clearInterval(interval);
-  }, []);
-
-  function handleIncrease() {
-     let newSet = status.setpoint + 5;
-     if (newSet > 100)
-       newSet = 100;
-     api.setPoint(newSet);
-     api.getStatus()
-        .then(res => setStatus(res.data))
-        .catch(err => console.error("Errore nel fetch /status:", err));
-  }
-  
-  function handleDecrease() {
-      let newSet = status.setpoint - 5;
-      if (newSet < 0)
-        newSet = 0;
-      api.setPoint(newSet);
-      api.getStatus()
-        .then(res => setStatus(res.data))
-        .catch(err => console.error("Errore nel fetch /status:", err));
-  }
-
   return (
     <Box
       sx={{
@@ -56,7 +14,7 @@ export default function App() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        position: 'relative', // importante per posizionamento figlio
+        position: 'relative',
       }}
     >
       <Container
@@ -67,32 +25,13 @@ export default function App() {
           borderRadius: 4,
           p: 3,
           boxShadow: 2,
-          zIndex: 1, // metti sopra l'immagine
+          zIndex: 1,
         }}
       >
         <Header />
-        <Box display="flex" justifyContent="space-evenly" alignItems="center" my={3}>
-          <Controls direction="down" onClick={handleDecrease} />
-          <TemperatureDisplay
-            currentTemp={status.current_temp}
-            setpoint={status.setpoint}
-            humidity={status.current_humidity}
-            heater={status.heater}
-          />
-          <Controls direction="up" onClick={handleIncrease} />
-        </Box>
-        <Box display="flex" justifyContent="end" alignItems="center" mx={4}>
-          <CheckLight
-            heaterOn={status.heater === 1}
-            fanOn={false} //TODO: implementare logica per il fan
-            timerSet={false} //TODO: implementare logica per il timer
-          />
-        </Box>
-        <Footer
-          ext_hum = {"---"}
-          int_hum = {status.current_humidity}
-        />
+        <StatusManager />
       </Container>
+
       <Box
         component="img"
         src="/Logo_ginger.svg"
@@ -103,11 +42,12 @@ export default function App() {
           right: 16,
           width: 150,
           height: 'auto',
-          opacity: 0.7, // un po' trasparente se vuoi
-          zIndex: 0, // sotto il container
-          pointerEvents: 'none', // per non interferire con i click
+          opacity: 0.7,
+          zIndex: 0,
+          pointerEvents: 'none',
         }}
       />
+
       <BackButton onClick={() => window.location.href = 'https://g1os.local'} />
       <DateTimeDisplay />
     </Box>
