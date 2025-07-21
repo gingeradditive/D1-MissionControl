@@ -2,19 +2,35 @@ import { Box, Tooltip } from '@mui/material';
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import AirIcon from '@mui/icons-material/Air';
 import AlarmOffIcon from '@mui/icons-material/AlarmOff';
+import AlarmIcon from '@mui/icons-material/Alarm';
 
-export default function CheckLight() {
+export default function CheckLight({ heaterOn, fanOn, timerSet }) {
   return (
     <Box display="flex" justifyContent="end" alignItems="center">
-        <Tooltip title="No timer set">
-            <AlarmOffIcon fontSize='medium' sx={{ color: '#cccccc', marginRight: 2 }}/>
-        </Tooltip>
-        <Tooltip title="Heater ON">
-            <LocalFireDepartmentIcon fontSize='medium' sx={{ color: 'red', marginRight: 2  }}/>
-        </Tooltip>
-        <Tooltip title="Fan ON">
-            <AirIcon fontSize='medium' sx={{ color: 'lightblue' }}/>
-        </Tooltip>
+      {/* Timer Icon */}
+      <Tooltip title={timerSet ? "Timer set" : "No timer set"}>
+        {timerSet ? (
+          <AlarmIcon fontSize="medium" sx={{ color: '#4caf50', marginRight: 2 }} />
+        ) : (
+          <AlarmOffIcon fontSize="medium" sx={{ color: '#cccccc', marginRight: 2 }} />
+        )}
+      </Tooltip>
+
+      {/* Heater Icon */}
+      <Tooltip title={heaterOn ? "Heater ON" : "Heater OFF"}>
+        <LocalFireDepartmentIcon
+          fontSize="medium"
+          sx={{ color: heaterOn ? 'red' : '#cccccc', marginRight: 2 }}
+        />
+      </Tooltip>
+
+      {/* Fan Icon */}
+      <Tooltip title={fanOn ? "Fan ON" : "Fan OFF"}>
+        <AirIcon
+          fontSize="medium"
+          sx={{ color: fanOn ? 'lightblue' : '#cccccc' }}
+        />
+      </Tooltip>
     </Box>
   );
 }

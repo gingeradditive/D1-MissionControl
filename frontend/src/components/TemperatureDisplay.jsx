@@ -1,73 +1,73 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Typography } from "@mui/material";
 
-export default function TemperatureDisplay() {
+export default function TemperatureDisplay({ currentTemp, setpoint }) {
   return (
     <Box textAlign="center">
       <Box
         sx={{
           width: 126,
           height: 126,
-          position: 'relative',
-          margin: 'auto',
+          position: "relative",
+          margin: "auto",
         }}
       >
-        {/* Cerchio 1 */}
+        {/* Cerchi animati */}
         <Box
           sx={{
-            position: 'absolute',
+            position: "absolute",
             top: 0,
             left: 0,
-            width: '100%',
-            height: '100%',
-            border: '1px dashed #d72e28',
-            borderRadius: '50%',
-            animation: 'pulse1 9s ease-in-out infinite',
+            width: "100%",
+            height: "100%",
+            border: "1px dashed #d72e28",
+            borderRadius: "50%",
+            animation: "pulse1 9s ease-in-out infinite",
           }}
         />
-        {/* Cerchio 2 */}
         <Box
           sx={{
-            position: 'absolute',
+            position: "absolute",
             top: 4,
             left: 4,
             width: 116,
             height: 116,
-            border: '2px dotted #d72e28',
-            borderRadius: '50%',
-            animation: 'pulse2 6s ease-in-out infinite',
+            border: "2px dotted #d72e28",
+            borderRadius: "50%",
+            animation: "pulse2 6s ease-in-out infinite",
           }}
         />
-        {/* Cerchio 3 */}
         <Box
           sx={{
-            position: 'absolute',
+            position: "absolute",
             top: 10,
             left: 10,
             width: 104,
             height: 104,
-            border: '2px solid #d72e28',
-            borderRadius: '50%',
-            animation: 'pulse3 3s ease-in-out infinite',
+            border: "2px solid #d72e28",
+            borderRadius: "50%",
+            animation: "pulse3 3s ease-in-out infinite",
           }}
         />
 
-        {/* Contenuto centrale NON animato */}
+        {/* Contenuto centrale */}
         <Box
           sx={{
-            position: 'absolute',
+            position: "absolute",
             top: 0,
             left: 0,
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          <Typography variant="h4">70°</Typography>
+          <Typography variant="h4">
+            {currentTemp !== null ? `${currentTemp.toFixed(1)}°` : "--"}
+          </Typography>
           <Typography variant="caption" color="gray">
-            Set
+            Set {setpoint !== null ? `${setpoint}°` : ""}
           </Typography>
         </Box>
       </Box>

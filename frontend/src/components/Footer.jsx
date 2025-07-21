@@ -32,7 +32,7 @@ const StyledSwitch = styled(Switch)(({ theme }) => ({
   },
 }));
 
-export default function Footer() {
+export default function Footer({ext_hum, int_hum}) {
   const [checked, setChecked] = useState(false);
 
   const handleChange = (event) => {
@@ -49,12 +49,14 @@ export default function Footer() {
       borderRadius={2}
       mt={2}
     >
-      <Box display="flex" justifyContent="center" alignItems="center">
-        <ThermostatIcon fontSize="small" />
-        <Typography variant="h6">24°</Typography>
-        <Typography variant="h6" sx={{ color: "#cccccc", padding: "0px 10px" }} >/</Typography>
+      <Box display="flex" justifyContent="center" alignItems="baseline">
         <WaterDropIcon fontSize="small" />
-        <Typography variant="h6">10%</Typography>
+        <Typography variant="caption" sx={{ fontSize: '0.6em', ml: 0.2 }}>ext</Typography>
+        <Typography variant="h6" sx={{ ml: 0.5 }}>{ext_hum !== null ? `${ext_hum}%` : ""}</Typography>
+        <Typography variant="h6" sx={{ color: "#cccccc", padding: "0px 10px" }}>/</Typography>
+        <WaterDropIcon fontSize="small" />
+        <Typography variant="caption" sx={{ fontSize: '0.6em', ml: 0.2 }}>int</Typography>
+        <Typography variant="h6" sx={{ ml: 0.5 }}>{int_hum !== null ? `${int_hum}%` : ""}</Typography>
       </Box>
       <Box position="relative" display="flex" justifyContent="end" alignItems="center">
         <StyledSwitch checked={checked} onChange={handleChange} />

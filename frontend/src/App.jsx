@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Box, Container } from '@mui/material';
 import Header from './components/Header';
 import TemperatureDisplay from './components/TemperatureDisplay';
@@ -6,10 +7,27 @@ import Footer from './components/Footer';
 import CheckLight from './components/CheckLight';
 import DateTimeDisplay from './components/DateTimeDisplay';
 import BackButton from './components/BackButton';
-
+import { api } from "./api";
 import './App.css';
 
 export default function App() {
+  const [status, setStatus] = useState({
+    current_temp: null,
+    setpoint: null,
+    current_humidity: null,
+    heater: null,
+  });
+
+  useEffect(() => {
+    let interval = setInterval(() => {
+      api.getStatus()
+        .then(res => setStatus(res.data))
+        .catch(err => console.error("Errore nel fetch /status:", err));
+    }, 1000); //
+
+    return () => clearInterval(interval); // pulizia all'unmount
+  }, []);
+
   return (
     <Box
       sx={{
@@ -35,13 +53,25 @@ export default function App() {
         <Header />
         <Box display="flex" justifyContent="space-evenly" alignItems="center" my={3}>
           <Controls direction="down" />
-          <TemperatureDisplay />
+          <TemperatureDisplay
+            currentTemp={status.current_temp}
+            setpoint={status.setpoint}
+            humidity={status.current_humidity}
+            heater={status.heater}
+          />
           <Controls direction="up" />
         </Box>
         <Box display="flex" justifyContent="end" alignItems="center" mx={4}>
-          <CheckLight />
+          <CheckLight
+            heaterOn={status.heater === 1}
+            fanOn={false} //TODO: implementare logica per il fan
+            timerSet={false} //TODO: implementare logica per il timer
+          />
         </Box>
-        <Footer />
+        <Footer
+          ext_hum = {"---"}
+          int_hum = {status.current_humidity}
+        />
       </Container>
       <Box
         component="img"
