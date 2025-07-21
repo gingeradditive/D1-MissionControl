@@ -101,6 +101,9 @@ sudo systemctl daemon-reload
 sudo systemctl enable dryer-backend.service
 sudo systemctl enable dryer-frontend.service
 
+echo "📂 Creo cartella per i log dell'applicazione..."
+mkdir -p "$PROJECT_DIR/logs"
+
 echo "✅ Tutto pronto!"
 echo "🔄 Riavvia il Raspberry Pi per avviare l'applicazione in modalità kiosk:"
 echo "    sudo reboot"
