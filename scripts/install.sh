@@ -55,11 +55,30 @@ chmod +x ~/.xinitrc
 echo "⚙️ Imposto Openbox come window manager..."
 echo "exec openbox-session" >> ~/.xinitrc
 
-echo "🚀 Configuro avvio automatico della GUI..."
-RCLOCAL="/etc/rc.local"
-if ! grep -q 'startx' "$RCLOCAL"; then
-    sudo sed -i "/^exit 0/i su - $USERNAME -c 'startx' &" "$RCLOCAL"
-fi
+echo "🚀 Creo servizio systemd per avvio automatico di X (startx)..."
+
+STARTX_SERVICE_PATH="/etc/systemd/system/startx.service"
+
+sudo tee $STARTX_SERVICE_PATH > /dev/null <<EOF
+[Unit]
+Description=Avvio automatico GUI con startx
+After=network.target
+
+[Service]
+User=$USERNAME
+WorkingDirectory=/home/$USERNAME
+Environment=DISPLAY=:0
+ExecStart=/usr/bin/startx
+Restart=on-failure
+
+[Install]
+WantedBy=graphical.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable startx.service
+
+echo "✅ Avvio grafico configurato con systemd (startx.service)"
 
 echo "=== ⚙️ CONFIGURO SERVIZI SYSTEMD ==="
 
@@ -88,7 +107,7 @@ After=network.target
 [Service]
 User=$USERNAME
 WorkingDirectory=$PROJECT_DIR/frontend
-ExecStart=/usr/bin/serve -s dist -l 3000
+ExecStart=/usr/local/bin/serve -s dist -l 3000
 Restart=always
 
 [Install]
