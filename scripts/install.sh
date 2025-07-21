@@ -124,5 +124,6 @@ echo "📂 Creo cartella per i log dell'applicazione..."
 mkdir -p "$PROJECT_DIR/logs"
 
 echo "✅ Tutto pronto!"
-echo "🔄 Riavvia il Raspberry Pi per avviare l'applicazione in modalità kiosk:"
-echo "    sudo reboot"
+
+echo "🔄 Riavvio il sistema per applicare le modifiche..."
+sudo reboot
