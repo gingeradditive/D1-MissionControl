@@ -65,21 +65,11 @@ class DryerController:
             GPIO.output(self.SSR_GPIO, GPIO.LOW)
             GPIO.cleanup()
 
-    def get_graph_data(self, mode='1h'):
+    def get_history_data(self, mode='1h'):
         now = datetime.now()
-        
-        # Copia dati per sicurezza thread
         data = list(self.temp_history)  # (timestamp, temp, heater)
-
         if not data:
             return []
-
-        # Per includere umidità e heater come ratio, serve estendere la storia con humidity e heater status
-        # Se non hai umidità in temp_history, serve adattare. Supponiamo che temp_history contenga (ts, temp, hum, heater)
-        # Quindi modifichiamo read_sensor per includere anche hum:
-        # self.temp_history.append((now, temp, hum, self.heater_status))
-
-        # Rimuovi o aggiorna in background_loop e read_sensor di conseguenza!
 
         # Calcoliamo intervallo e aggregazione
         if mode == '1m':  # ultimi 60 secondi, valori grezzi
@@ -159,7 +149,9 @@ class DryerController:
 
         else:
             raise ValueError("Invalid mode")
-
+    
+    def get_status_data(self):
+        return self.temp_history[-1]
 
     def aggregate_data(self, data, now, interval_seconds, window_seconds):
         buckets = {}

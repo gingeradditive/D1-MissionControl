@@ -30,20 +30,25 @@ thread = Thread(target=background_loop)
 thread.start()
 
 @app.get("/status")
-def get_status(mode: str = Query(default="1h", enum=["1m", "1h", "12h"])):
-    try:
-        history = dryer.get_graph_data(mode)
-    except ValueError:
-        return {"error": "Invalid mode. Use one of: 1m, 1h, 12h"}
-
-    latest = history[-1] if history else (datetime.now(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-    timestamp, temp, hum, heater_ratio, temp_min, temp_max, hum_min, hum_max = latest
+def get_status():
+    latest = dryer.get_status_data()
+    ts, temp, hum, heater = latest
 
     return {
         "setpoint": dryer.set_temp,
         "current_temp": round(temp, 2),
         "current_humidity": round(hum, 2),
-        "heater_ratio": round(heater_ratio, 2),
+        "heater": round(heater, 2)
+    }
+
+@app.get("/history")
+def get_status(mode: str = Query(default="1h", enum=["1m", "1h", "12h"])):
+    try:
+        history = dryer.get_history_data(mode)
+    except ValueError:
+        return {"error": "Invalid mode. Use one of: 1m, 1h, 12h"}
+
+    return {
         "mode": mode,
         "history": [
             {
