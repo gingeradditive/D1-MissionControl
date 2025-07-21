@@ -1,11 +1,23 @@
+import { useEffect, useState } from 'react';
 import { Box, Container } from '@mui/material';
 import Header from './components/Header';
 import StatusManager from './components/StatusManager';
 import DateTimeDisplay from './components/DateTimeDisplay';
 import BackButton from './components/BackButton';
 import './App.css';
+import { api } from './api';
 
 export default function App() {
+  const [showBackButton, setShowBackButton] = useState(false);
+
+  useEffect(() => {
+    const checkG1OS = async () => {
+      const result = await api.getG1OS();
+      setShowBackButton(result.data.status === true);
+    };
+    checkG1OS();
+  }, []);
+
   return (
     <Box
       sx={{
@@ -48,7 +60,10 @@ export default function App() {
         }}
       />
 
-      <BackButton onClick={() => window.location.href = 'https://g1os.local'} />
+      {showBackButton && (
+        <BackButton onClick={() => window.location.href = 'https://g1os.local'} />
+      )}
+
       <DateTimeDisplay />
     </Box>
   );

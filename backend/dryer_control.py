@@ -20,6 +20,7 @@ class DryerController:
         self.heater_status = False
         self.temp_history = deque(maxlen=43200)  # 12h a 1Hz
         self.log_timer = time.time()
+        self.dryer_status = False
 
         # DEMO VALUES 
         self.prev_temp = random.uniform(20, 30)
@@ -38,6 +39,16 @@ class DryerController:
             self.i2c = board.I2C()
             self.sht = adafruit_sht4x.SHT4x(self.i2c)
             self.sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
+
+    def start(self):
+        if not self.dryer_status:
+            self.dryer_status = True
+            print("Heater started.")
+
+    def stop(self):
+        if self.dryer_status:
+            self.dryer_status = False
+            print("Heater stopped.")
 
     def read_sensor(self):
         if IS_RASPBERRY:
@@ -58,6 +69,12 @@ class DryerController:
         return now, temp, hum
 
     def update_heater(self, temp):
+        if not self.dryer_status:
+            if IS_RASPBERRY:
+                GPIO.output(self.SSR_GPIO, GPIO.LOW)
+            self.heater_status = False
+            return
+        
         if temp < self.set_temp - self.tolerance:
             if IS_RASPBERRY:
                 GPIO.output(self.SSR_GPIO, GPIO.HIGH)
@@ -162,7 +179,11 @@ class DryerController:
             raise ValueError("Invalid mode")
     
     def get_status_data(self):
-        return self.temp_history[-1]
+        if not self.temp_history: 
+            data = datetime.now(), 0.0, 0.0, 0.0, False
+        else: 
+            data = self.temp_history[-1] + (self.dryer_status,) 
+        return data
 
     def aggregate_data(self, data, now, interval_seconds, window_seconds):
         buckets = {}

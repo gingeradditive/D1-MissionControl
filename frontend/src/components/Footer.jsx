@@ -1,7 +1,6 @@
-import React, { useState } from "react";
-import { Box, IconButton, Typography, Switch, styled } from '@mui/material';
-import ThermostatIcon from '@mui/icons-material/Thermostat';
-import WaterDropIcon from '@mui/icons-material/WaterDrop';
+import React, { useEffect, useState } from "react";
+import { Box, Typography, Switch, styled } from "@mui/material";
+import WaterDropIcon from "@mui/icons-material/WaterDrop";
 import PowerSettingsNewIcon from "@mui/icons-material/PowerSettingsNew";
 
 const StyledSwitch = styled(Switch)(({ theme }) => ({
@@ -32,11 +31,18 @@ const StyledSwitch = styled(Switch)(({ theme }) => ({
   },
 }));
 
-export default function Footer({ext_hum, int_hum}) {
-  const [checked, setChecked] = useState(false);
+export default function Footer({ ext_hum, int_hum, status, onStatusChange }) {
+  const [checked, setChecked] = useState(status);
+
+  // Sync internal state with external prop
+  useEffect(() => {
+    setChecked(status);
+  }, [status]);
 
   const handleChange = (event) => {
-    setChecked(event.target.checked);
+    const newStatus = event.target.checked;
+    setChecked(newStatus);           // Update internal state
+    onStatusChange(newStatus);       // Notify parent
   };
 
   return (
@@ -69,9 +75,7 @@ export default function Footer({ext_hum, int_hum}) {
           alignItems="center"
           justifyContent="center"
         >
-          <PowerSettingsNewIcon
-            style={{ fontSize: 14, color: "gray" }}
-          />
+          <PowerSettingsNewIcon style={{ fontSize: 14, color: "gray" }} />
         </Box>
       </Box>
     </Box>

@@ -12,6 +12,7 @@ export default function StatusManager() {
     setpoint: null,
     current_humidity: null,
     heater: null,
+    status: false,
   });
 
   useEffect(() => {
@@ -40,6 +41,17 @@ export default function StatusManager() {
       .catch(err => console.error("Errore nel fetch /status:", err));
   };
 
+  const handleStatusChange = () => {
+    api.setStatus(!status.status)
+      .then(res => {
+        setStatus(prevStatus => ({
+          ...prevStatus,
+          status: !prevStatus.status,
+        }));
+      })
+      .catch(err => console.error("Errore nel cambio stato:", err));
+  }
+
   return (
     <>
       <Box display="flex" justifyContent="space-evenly" alignItems="center" my={3}>
@@ -64,6 +76,8 @@ export default function StatusManager() {
       <Footer
         ext_hum="---"
         int_hum={status.current_humidity}
+        status= {status.status}
+        onStatusChange={handleStatusChange}
       />
     </>
   );
