@@ -6,9 +6,11 @@ import DateTimeDisplay from './components/DateTimeDisplay';
 import BackButton from './components/BackButton';
 import './App.css';
 import { api } from './api';
+import "react-simple-keyboard/build/css/index.css";
 
 export default function App() {
   const [showBackButton, setShowBackButton] = useState(false);
+  const isKiosk = new URLSearchParams(window.location.search).get("kiosk") === "true";
 
   useEffect(() => {
     const checkG1OS = async () => {
@@ -52,7 +54,8 @@ export default function App() {
           position: 'fixed',
           bottom: 16,
           right: 16,
-          width: 150,
+          width: "8vw",
+          maxWidth: 100,
           height: 'auto',
           opacity: 0.7,
           zIndex: 0,
@@ -60,7 +63,7 @@ export default function App() {
         }}
       />
 
-      {showBackButton && (
+      {showBackButton & !isKiosk && (
         <BackButton onClick={() => window.location.href = 'https://g1os.local'} />
       )}
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, List, ListItem, ListItemButton,
@@ -10,6 +10,8 @@ import SignalWifi1Bar from '@mui/icons-material/SignalWifi1Bar';
 import SignalWifi2Bar from '@mui/icons-material/SignalWifi2Bar';
 import SignalWifi3Bar from '@mui/icons-material/SignalWifi3Bar';
 import SignalWifi4Bar from '@mui/icons-material/SignalWifi4Bar';
+import Keyboard from 'react-simple-keyboard';
+import 'react-simple-keyboard/build/css/index.css';
 
 const getWifiIcon = (strength) => {
   switch (strength) {
@@ -22,9 +24,24 @@ const getWifiIcon = (strength) => {
 };
 
 export default function WifiDialog({ open, onClose, wifiList, selectedWifi, setSelectedWifi, wifiPassword, setWifiPassword }) {
+  const [showKeyboard, setShowKeyboard] = useState(false);
+  const keyboardRef = useRef();
+  const isKiosk = new URLSearchParams(window.location.search).get("kiosk") === "true";
+
   const handleConnect = () => {
     console.log(`Connecting to ${selectedWifi} with password ${wifiPassword}`);
     onClose();
+  };
+
+  const onChangeInput = (e) => {
+    setWifiPassword(e.target.value);
+    if (keyboardRef.current) {
+      keyboardRef.current.setInput(e.target.value);
+    }
+  };
+
+  const onKeyboardChange = (input) => {
+    setWifiPassword(input);
   };
 
   return (
@@ -59,8 +76,19 @@ export default function WifiDialog({ open, onClose, wifiList, selectedWifi, setS
               label="Password"
               margin="normal"
               value={wifiPassword}
-              onChange={(e) => setWifiPassword(e.target.value)}
+              onChange={onChangeInput}
+              onFocus={() => setShowKeyboard(true && isKiosk)}
             />
+            {showKeyboard && (
+              <Box mt={2}>
+                <Keyboard
+                  keyboardRef={(r) => (keyboardRef.current = r)}
+                  layoutName="default"
+                  onChange={onKeyboardChange}
+                  inputName="password"
+                />
+              </Box>
+            )}
           </>
         )}
       </DialogContent>
