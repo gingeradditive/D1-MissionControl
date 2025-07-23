@@ -18,6 +18,7 @@ class DryerController:
         self.set_temp = set_temp
         self.tolerance = set_temp * 0.01
         self.heater_status = False
+        self.fan_status = False
         self.temp_history = deque(maxlen=43200)  # 12h a 1Hz
         self.log_timer = time.time()
         self.dryer_status = False
@@ -28,13 +29,18 @@ class DryerController:
 
         self.log_file = f"logs/temperature_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         with open(self.log_file, "w") as f:
-            f.write("timestamp,temperature,humidity,heater_on,setpoint\n")
+            f.write("timestamp;temperature;humidity;heater_status;fan_status;setpoint\n")
 
         if IS_RASPBERRY:
-            self.SSR_GPIO = 17
+            self.SSR_HEATER_GPIO = 23
+            self.SSR_FAN_GPIO = 24
             GPIO.setmode(GPIO.BCM)
-            GPIO.setup(self.SSR_GPIO, GPIO.OUT)
-            GPIO.output(self.SSR_GPIO, GPIO.LOW)
+            
+            GPIO.setup(self.SSR_HEATER_GPIO, GPIO.OUT)
+            GPIO.setup(self.SSR_FAN_GPIO, GPIO.OUT)
+
+            GPIO.output(self.SSR_HEATER_GPIO, GPIO.LOW)
+            GPIO.output(self.SSR_FAN_GPIO, GPIO.LOW)
 
             self.i2c = board.I2C()
             self.sht = adafruit_sht4x.SHT4x(self.i2c)
@@ -43,11 +49,17 @@ class DryerController:
     def start(self):
         if not self.dryer_status:
             self.dryer_status = True
+            if IS_RASPBERRY:
+                GPIO.output(self.SSR_FAN_GPIO, GPIO.HIGH)
+            self.fan_status = True
             print("Heater started.")
 
     def stop(self):
         if self.dryer_status:
             self.dryer_status = False
+            if IS_RASPBERRY:
+                GPIO.output(self.SSR_FAN_GPIO, GPIO.LOW)
+            self.fan_status = False
             print("Heater stopped.")
 
     def read_sensor(self):
@@ -65,32 +77,32 @@ class DryerController:
             hum = self.prev_hum
 
         now = datetime.now()
-        self.temp_history.append((now, temp, hum, self.heater_status))
+        self.temp_history.append((now, temp, hum, self.heater_status, self.fan_status))
         return now, temp, hum
 
     def update_heater(self, temp):
         if not self.dryer_status:
             if IS_RASPBERRY:
-                GPIO.output(self.SSR_GPIO, GPIO.LOW)
+                GPIO.output(self.SSR_HEATER_GPIO, GPIO.LOW)
             self.heater_status = False
             return
         
         if temp < self.set_temp - self.tolerance:
             if IS_RASPBERRY:
-                GPIO.output(self.SSR_GPIO, GPIO.HIGH)
+                GPIO.output(self.SSR_HEATER_GPIO, GPIO.HIGH)
             self.heater_status = True
         elif temp > self.set_temp + self.tolerance:
             if IS_RASPBERRY:
-                GPIO.output(self.SSR_GPIO, GPIO.LOW)
+                GPIO.output(self.SSR_HEATER_GPIO, GPIO.LOW)
             self.heater_status = False
 
     def log(self, timestamp, temp, hum):
         with open(self.log_file, "a") as f:
-            f.write(f"{timestamp},{temp:.2f},{hum:.2f},{self.heater_status},{self.set_temp:.2f}\n")
+            f.write(f"{timestamp};{temp:.2f};{hum:.2f};{self.heater_status};{self.fan_status};{self.set_temp:.2f}\n")
 
     def shutdown(self):
         if IS_RASPBERRY:
-            GPIO.output(self.SSR_GPIO, GPIO.LOW)
+            GPIO.output(self.SSR_HEATER_GPIO, GPIO.LOW)
             GPIO.cleanup()
 
     def get_history_data(self, mode='1h'):
@@ -104,9 +116,10 @@ class DryerController:
             filtered = [x for x in data if (now - x[0]).total_seconds() <= 60]
             # Qui i valori sono singoli, ma possiamo fare anche min/max identici a temp stesso
             results = []
-            for ts, temp, hum, heater in filtered:
+            for ts, temp, hum, heater, fan in filtered:
                 heater_ratio = 1.0 if heater else 0.0
-                results.append((ts, temp, hum, heater_ratio, temp, temp, hum, hum))
+                fan_ratio = 1.0 if fan else 0.0
+                results.append((ts, temp, hum, heater_ratio, fan_ratio, temp, temp, hum, hum))
             return results
 
         elif mode == '1h':
@@ -124,17 +137,19 @@ class DryerController:
                 temps = [x[1] for x in window_data]
                 hums = [x[2] for x in window_data]
                 heaters = [1 if x[3] else 0 for x in window_data]
+                fans = [1 if x[4] else 0 for x in window_data]
                 ts = window_start + timedelta(seconds=30)  # metà intervallo
 
                 temp_avg = sum(temps) / len(temps)
                 hum_avg = sum(hums) / len(hums)
                 heater_ratio = sum(heaters) / len(heaters)
-
+                fan_ratio = sum(fans) / len(fans)
                 results.append((
                     ts,
                     temp_avg,
                     hum_avg,
                     heater_ratio,
+                    fan_ratio,
                     min(temps),
                     max(temps),
                     min(hums),
@@ -157,17 +172,20 @@ class DryerController:
                 temps = [x[1] for x in window_data]
                 hums = [x[2] for x in window_data]
                 heaters = [1 if x[3] else 0 for x in window_data]
+                fans = [1 if x[3] else 0 for x in window_data]
                 ts = window_start + timedelta(minutes=15)  # metà intervallo
 
                 temp_avg = sum(temps) / len(temps)
                 hum_avg = sum(hums) / len(hums)
                 heater_ratio = sum(heaters) / len(heaters)
+                fan_ratio = sum(fans) / len(fans)
 
                 results.append((
                     ts,
                     temp_avg,
                     hum_avg,
                     heater_ratio,
+                    fan_ratio,
                     min(temps),
                     max(temps),
                     min(hums),

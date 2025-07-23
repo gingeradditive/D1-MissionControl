@@ -10,7 +10,7 @@ export default function CheckLight({ heaterOn, fanOn, timerSet }) {
       {/* Timer Icon */}
       <Tooltip title={timerSet ? "Timer set" : "No timer set"}>
         {timerSet ? (
-          <AlarmIcon fontSize="medium" sx={{ color: '#4caf50', marginRight: 2 }} />
+          <AlarmIcon fontSize="medium" sx={{ color: '#009688', marginRight: 2 }} />
         ) : (
           <AlarmOffIcon fontSize="medium" sx={{ color: '#cccccc', marginRight: 2 }} />
         )}
@@ -20,7 +20,7 @@ export default function CheckLight({ heaterOn, fanOn, timerSet }) {
       <Tooltip title={heaterOn ? "Heater ON" : "Heater OFF"}>
         <LocalFireDepartmentIcon
           fontSize="medium"
-          sx={{ color: heaterOn ? 'red' : '#cccccc', marginRight: 2 }}
+          sx={{ color: heaterOn ? '#f44336' : '#cccccc', marginRight: 2 }}
         />
       </Tooltip>
 
@@ -28,7 +28,7 @@ export default function CheckLight({ heaterOn, fanOn, timerSet }) {
       <Tooltip title={fanOn ? "Fan ON" : "Fan OFF"}>
         <AirIcon
           fontSize="medium"
-          sx={{ color: fanOn ? 'lightblue' : '#cccccc' }}
+          sx={{ color: fanOn ? '#3f51b5' : '#cccccc' }}
         />
       </Tooltip>
     </Box>

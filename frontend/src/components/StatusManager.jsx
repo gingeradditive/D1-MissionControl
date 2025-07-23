@@ -11,7 +11,8 @@ export default function StatusManager() {
     current_temp: null,
     setpoint: null,
     current_humidity: null,
-    heater: null,
+    heater: false,
+    fan: false,
     status: false,
   });
 
@@ -59,16 +60,15 @@ export default function StatusManager() {
         <TemperatureDisplay
           currentTemp={status.current_temp}
           setpoint={status.setpoint}
-          humidity={status.current_humidity}
-          heater={status.heater}
+          status={status.status}
         />
         <Controls direction="up" onClick={handleIncrease} />
       </Box>
 
       <Box display="flex" justifyContent="end" alignItems="center" mx={4}>
         <CheckLight
-          heaterOn={status.heater === 1}
-          fanOn={false} // TODO
+          heaterOn={status.heater}
+          fanOn={status.fan}
           timerSet={false} // TODO
         />
       </Box>

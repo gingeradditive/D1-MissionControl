@@ -37,13 +37,14 @@ thread.start()
 @app.get("/status")
 def get_status():
     latest = dryer.get_status_data()
-    ts, temp, hum, heater, status = latest
+    ts, temp, hum, heater, fan, status = latest
 
     return {
         "setpoint": dryer.set_temp,
         "current_temp": round(temp, 2),
         "current_humidity": round(hum, 2),
-        "heater": round(heater, 2),
+        "heater": heater,
+        "fan": fan,
         "status": status,
     }
 
@@ -75,11 +76,12 @@ def get_status(mode: str = Query(default="1h", enum=["1m", "1h", "12h"])):
                 "temperature": round(t, 2),
                 "humidity": round(h, 2),
                 "heater_ratio": round(r, 2),
+                "fan_ratio": round(f, 2),
                 "temp_min": round(t_min, 2),
                 "temp_max": round(t_max, 2),
                 "hum_min": round(h_min, 2),
                 "hum_max": round(h_max, 2),
-            } for ts, t, h, r, t_min, t_max, h_min, h_max in history
+            } for ts, t, h, r, f, t_min, t_max, h_min, h_max in history
         ]
     }
 

@@ -56,10 +56,10 @@ export default function Footer({ ext_hum, int_hum, status, onStatusChange }) {
       mt={2}
     >
       <Box display="flex" justifyContent="center" alignItems="baseline">
-        <WaterDropIcon fontSize="small" />
+        {/* <WaterDropIcon fontSize="small" />
         <Typography variant="caption" sx={{ fontSize: '0.6em', ml: 0.2 }}>ext</Typography>
         <Typography variant="h6" sx={{ ml: 0.5 }}>{ext_hum !== null ? `${ext_hum}%` : ""}</Typography>
-        <Typography variant="h6" sx={{ color: "#cccccc", padding: "0px 10px" }}>/</Typography>
+        <Typography variant="h6" sx={{ color: "#cccccc", padding: "0px 10px" }}>/</Typography> */}
         <WaterDropIcon fontSize="small" />
         <Typography variant="caption" sx={{ fontSize: '0.6em', ml: 0.2 }}>int</Typography>
         <Typography variant="h6" sx={{ ml: 0.5 }}>{int_hum !== null ? `${int_hum}%` : ""}</Typography>

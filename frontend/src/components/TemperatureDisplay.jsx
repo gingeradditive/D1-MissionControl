@@ -1,6 +1,10 @@
 import { Box, Typography } from "@mui/material";
 
-export default function TemperatureDisplay({ currentTemp, setpoint }) {
+export default function TemperatureDisplay({ currentTemp, setpoint, status }) {
+  // Colori condizionati dallo status
+  const ringColor = status ? "#d72e28" : "#ccc";
+  const animated = status;
+
   return (
     <Box textAlign="center">
       <Box
@@ -11,7 +15,7 @@ export default function TemperatureDisplay({ currentTemp, setpoint }) {
           margin: "auto",
         }}
       >
-        {/* Cerchi animati */}
+        {/* Cerchi */}
         <Box
           sx={{
             position: "absolute",
@@ -19,9 +23,9 @@ export default function TemperatureDisplay({ currentTemp, setpoint }) {
             left: 0,
             width: "100%",
             height: "100%",
-            border: "1px dashed #d72e28",
+            border: `1px dashed ${ringColor}`,
             borderRadius: "50%",
-            animation: "pulse1 9s ease-in-out infinite",
+            animation: animated ? "pulse1 9s ease-in-out infinite" : "none",
           }}
         />
         <Box
@@ -31,9 +35,9 @@ export default function TemperatureDisplay({ currentTemp, setpoint }) {
             left: 4,
             width: 116,
             height: 116,
-            border: "2px dotted #d72e28",
+            border: `2px dotted ${ringColor}`,
             borderRadius: "50%",
-            animation: "pulse2 6s ease-in-out infinite",
+            animation: animated ? "pulse2 6s ease-in-out infinite" : "none",
           }}
         />
         <Box
@@ -43,9 +47,9 @@ export default function TemperatureDisplay({ currentTemp, setpoint }) {
             left: 10,
             width: 104,
             height: 104,
-            border: "2px solid #d72e28",
+            border: `2px solid ${ringColor}`,
             borderRadius: "50%",
-            animation: "pulse3 3s ease-in-out infinite",
+            animation: animated ? "pulse3 3s ease-in-out infinite" : "none",
           }}
         />
 
