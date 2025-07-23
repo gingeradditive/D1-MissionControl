@@ -12,9 +12,13 @@ try:
 except (ImportError, NotImplementedError):
     IS_RASPBERRY = False
 
+SETPOINT_FILE = "setpoint.txt"
+
 
 class DryerController:
-    def __init__(self, set_temp):
+
+    def __init__(self):
+        set_temp = self.load_setpoint()
         self.set_temp = set_temp
         self.tolerance = set_temp * 0.01
         self.heater_status = False
@@ -23,19 +27,20 @@ class DryerController:
         self.log_timer = time.time()
         self.dryer_status = False
 
-        # DEMO VALUES 
+        # DEMO VALUES
         self.prev_temp = random.uniform(20, 30)
         self.prev_hum = random.uniform(30, 50)
 
         self.log_file = f"logs/temperature_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         with open(self.log_file, "w") as f:
-            f.write("timestamp;temperature;humidity;heater_status;fan_status;setpoint\n")
+            f.write(
+                "timestamp;temperature;humidity;heater_status;fan_status;setpoint\n")
 
         if IS_RASPBERRY:
             self.SSR_HEATER_GPIO = 23
             self.SSR_FAN_GPIO = 24
             GPIO.setmode(GPIO.BCM)
-            
+
             GPIO.setup(self.SSR_HEATER_GPIO, GPIO.OUT)
             GPIO.setup(self.SSR_FAN_GPIO, GPIO.OUT)
 
@@ -68,7 +73,8 @@ class DryerController:
         else:
             # Variazione lenta
             self.prev_temp += random.uniform(-0.5, 0.5)
-            self.prev_temp = max(15, min(70, self.prev_temp))  # Limita l'intervallo
+            # Limita l'intervallo
+            self.prev_temp = max(15, min(70, self.prev_temp))
 
             self.prev_hum += random.uniform(-1, 1)
             self.prev_hum = max(10, min(90, self.prev_hum))
@@ -77,7 +83,8 @@ class DryerController:
             hum = self.prev_hum
 
         now = datetime.now()
-        self.temp_history.append((now, temp, hum, self.heater_status, self.fan_status))
+        self.temp_history.append(
+            (now, temp, hum, self.heater_status, self.fan_status))
         return now, temp, hum
 
     def update_heater(self, temp):
@@ -86,7 +93,7 @@ class DryerController:
                 GPIO.output(self.SSR_HEATER_GPIO, GPIO.LOW)
             self.heater_status = False
             return
-        
+
         if temp < self.set_temp - self.tolerance:
             if IS_RASPBERRY:
                 GPIO.output(self.SSR_HEATER_GPIO, GPIO.HIGH)
@@ -98,7 +105,8 @@ class DryerController:
 
     def log(self, timestamp, temp, hum):
         with open(self.log_file, "a") as f:
-            f.write(f"{timestamp};{temp:.2f};{hum:.2f};{self.heater_status};{self.fan_status};{self.set_temp:.2f}\n")
+            f.write(
+                f"{timestamp};{temp:.2f};{hum:.2f};{self.heater_status};{self.fan_status};{self.set_temp:.2f}\n")
 
     def shutdown(self):
         if IS_RASPBERRY:
@@ -119,7 +127,8 @@ class DryerController:
             for ts, temp, hum, heater, fan in filtered:
                 heater_ratio = 1.0 if heater else 0.0
                 fan_ratio = 1.0 if fan else 0.0
-                results.append((ts, temp, hum, heater_ratio, fan_ratio, temp, temp, hum, hum))
+                results.append((ts, temp, hum, heater_ratio,
+                               fan_ratio, temp, temp, hum, hum))
             return results
 
         elif mode == '1h':
@@ -131,7 +140,8 @@ class DryerController:
             for i in range(60):
                 window_start = start + timedelta(minutes=i)
                 window_end = window_start + timedelta(minutes=1)
-                window_data = [x for x in filtered if window_start <= x[0] < window_end]
+                window_data = [
+                    x for x in filtered if window_start <= x[0] < window_end]
                 if not window_data:
                     continue
                 temps = [x[1] for x in window_data]
@@ -166,7 +176,8 @@ class DryerController:
             for i in range(24):
                 window_start = start + timedelta(minutes=30*i)
                 window_end = window_start + timedelta(minutes=30)
-                window_data = [x for x in filtered if window_start <= x[0] < window_end]
+                window_data = [
+                    x for x in filtered if window_start <= x[0] < window_end]
                 if not window_data:
                     continue
                 temps = [x[1] for x in window_data]
@@ -195,12 +206,12 @@ class DryerController:
 
         else:
             raise ValueError("Invalid mode")
-    
+
     def get_status_data(self):
-        if not self.temp_history: 
+        if not self.temp_history:
             data = datetime.now(), 0.0, 0.0, 0.0, False
-        else: 
-            data = self.temp_history[-1] + (self.dryer_status,) 
+        else:
+            data = self.temp_history[-1] + (self.dryer_status,)
         return data
 
     def aggregate_data(self, data, now, interval_seconds, window_seconds):
@@ -225,6 +236,27 @@ class DryerController:
                 result.append((bucket_time, avg_temp, avg_hum, heater_ratio))
 
         return result
+
+    def save_setpoint(self, value):
+        try:
+            with open(SETPOINT_FILE, "w") as f:
+                f.write(f"{value}")
+        except Exception as e:
+            print(f"Errore nel salvataggio del setpoint: {e}")
+
+    def load_setpoint(self):
+        try:
+            with open(SETPOINT_FILE, "r") as f:
+                return float(f.read().strip())
+        except (FileNotFoundError, ValueError):
+            print("Setpoint non trovato, uso valore di default 45.0°C")
+            return 45.0
+
+    def update_setpoint(self, new_temp):
+        self.set_temp = new_temp
+        self.tolerance = new_temp * 0.01
+        self.save_setpoint(new_temp)
+        print(f"Setpoint aggiornato a {new_temp}°C")
 
 
 # --- Esempio di utilizzo in un loop principale ---

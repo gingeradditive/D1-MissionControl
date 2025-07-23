@@ -7,7 +7,7 @@ from datetime import datetime
 import time
 
 app = FastAPI()
-dryer = DryerController(set_temp=45.0)  # default value
+dryer = DryerController()  # default value
 network = NetworkController()
 
 origins = ["*"]
@@ -88,8 +88,7 @@ def get_status(mode: str = Query(default="1h", enum=["1m", "1h", "12h"])):
 
 @app.post("/setpoint/{value}")
 def set_setpoint(value: float):
-    dryer.set_temp = value
-    dryer.tolerance = value * 0.01
+    dryer.update_setpoint(value)
     return {"setpoint": dryer.set_temp}
 
 
