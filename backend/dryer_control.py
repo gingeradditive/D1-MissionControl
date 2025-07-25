@@ -19,18 +19,13 @@ class DryerController:
     def __init__(self):
         self.last_heater_action = time.time()
         self.heater_pulse_duration = 10  # secondi
-        self.heater_pause_duration = 5  # attesa tra gli impulsi
-        self.last_heater_action = time.time()
-        self.heater_pulse_duration = 3  # secondi
-
-        self.integral_error = 0.0
-        self.prev_error = 0.0
-
         self.Kp = 5.0      # quanto più l’errore è alto, tanto meno attende
         self.Ki = 0.1      # accumulo dell’errore nel tempo
         self.min_pause = 5   # attesa minima tra impulsi
         self.max_pause = 60  # attesa massima tra impulsi
         
+        self.integral_error = 0.0
+        self.prev_error = 0.0
         set_temp = self.load_setpoint()
         self.set_temp = set_temp
         self.tolerance = set_temp * 0.01
