@@ -40,18 +40,18 @@ https://learn.microsoft.com/it-it/dotnet/iot/media/gpio-pinout-diagram.png
 
 |                     |                      |                        |                     |
 |--------------------:|---------------------:|------------------------|---------------------|
-|                     | **+3V3**             | **+5V**                | SHT4X (+5V)         |
-| SHT4X (SDA)         | **GPIO 2 (SDA)**     | **+5V**                | DEVKIT (+5V)        |
-| SHT4X (SCL)         | **GPIO 3 (SCL)**     | **GND**                | DEVKIT (GND)        |
+| MAX6675 (3V3)       | **+3V3**             | **+5V**                |                     |
+|                     | **GPIO 2 (SDA)**     | **+5V**                | DEVKIT (+5V)        |
+|                     | **GPIO 3 (SCL)**     | **GND**                | DEVKIT (GND)        |
 |                     | **GPIO 4 (GPCLK0)**  | **GPIO 14 (TXD**)      |                     |
-| SHT4X (GND)         | **GND**              | **GPIO 15 (RXD**)      |                     |
+| MAX6675 (GND)       | **GND**              | **GPIO 15 (RXD**)      |                     |
 |                     | **GPIO 17**          | **GPIO 18 (PCM_CLK**)  |                     |
 |                     | **GPIO 27**          | **GND**                | SSR_HEATER (GND)    |
 |                     | **GPIO 22**          | **GPIO 23**            | SSR_HEATER (SIGNAL) |
 |                     | **+3V3**             | **GPIO 24**            | SSR_FAN (SIGNAL)    |
 |                     | **GPIO 10 (MOSI)**   | **GND**                | SSR_FAN (GND)       |
-|                     | **GPIO 9 (MISO)**    | **GPIO 25**            |                     |
-|                     | **GPIO 11 (SCLK)**   | **GPIO 8 (CE0**)       |                     |
+| MAX6675 (SO)        | **GPIO 9 (MISO)**    | **GPIO 25**            |                     |
+| MAX6675 (SCK)       | **GPIO 11 (SCLK)**   | **GPIO 8 (CE0**)       | MAX6675 (CS)        |
 |                     | **GND**              | **GPIO 7 (CE1**)       |                     |
 |                     | **GPIO 0 (ID_SD)**   | **GPIO 1 (ID_SC**)     |                     |
 |                     | **GPIO 5**           | **GND**                |                     |

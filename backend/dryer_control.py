@@ -1,12 +1,11 @@
 import time
 import random
-import sys
 from datetime import datetime, timedelta
 from collections import deque
 
 try:
-    import board
-    import adafruit_sht4x
+    import spidev
+    import time
     import RPi.GPIO as GPIO
     IS_RASPBERRY = True
 except (ImportError, NotImplementedError):
@@ -39,6 +38,8 @@ class DryerController:
         if IS_RASPBERRY:
             self.SSR_HEATER_GPIO = 23
             self.SSR_FAN_GPIO = 24
+            self.MAX6675BUS=0
+            self.MAX6675DEVICE=0
             GPIO.setmode(GPIO.BCM)
 
             GPIO.setup(self.SSR_HEATER_GPIO, GPIO.OUT)
@@ -47,9 +48,10 @@ class DryerController:
             GPIO.output(self.SSR_HEATER_GPIO, GPIO.LOW)
             GPIO.output(self.SSR_FAN_GPIO, GPIO.LOW)
 
-            self.i2c = board.I2C()
-            self.sht = adafruit_sht4x.SHT4x(self.i2c)
-            self.sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
+            self.spi = spidev.SpiDev()
+            self.spi.open(self.MAX6675BUS, self.MAX6675DEVICE)
+            self.spi.max_speed_hz = 5000000
+            self.spi.mode = 0b00
 
     def start(self):
         if not self.dryer_status:
@@ -69,7 +71,14 @@ class DryerController:
 
     def read_sensor(self):
         if IS_RASPBERRY:
-            temp, hum = self.sht.measurements
+            raw = self.spi.readbytes(2)
+            if len(raw) != 2:
+                return None
+            value = (raw[0] << 8) | raw[1]
+            if value & 0x4:
+                return None
+            temp = (value >> 3) * 0.25           
+            hum = 0.0
         else:
             # Variazione lenta
             self.prev_temp += random.uniform(-0.5, 0.5)
