@@ -18,8 +18,8 @@ class DryerController:
 
     def __init__(self):
         self.last_heater_action = time.time()
-        self.heater_pulse_duration = 3  # secondi
-        self.heater_pause_duration = 10  # attesa tra gli impulsi
+        self.heater_pulse_duration = 10  # secondi
+        self.heater_pause_duration = 5  # attesa tra gli impulsi
         self.last_heater_action = time.time()
         self.heater_pulse_duration = 3  # secondi
 
@@ -136,7 +136,7 @@ class DryerController:
                 self.last_heater_action = now
                 print(f"[+{error:.2f}°C] Heater ON per {self.heater_pulse_duration}s (pause: {pause_duration:.1f}s)")
 
-        # Spegni dopo 3 secondi
+        # Spegni dopo X secondi
         elif self.heater_status and now - self.last_heater_action >= self.heater_pulse_duration:
             if IS_RASPBERRY:
                 GPIO.output(self.SSR_HEATER_GPIO, GPIO.LOW)
