@@ -39,6 +39,7 @@ thread.start()
 @app.get("/status")
 def get_status():
     latest = dryer.get_status_data()
+    network_status = network.get_connection_status()
     ts, temp, hum, heater, fan, status = latest
 
     return {
@@ -48,6 +49,7 @@ def get_status():
         "heater": heater,
         "fan": fan,
         "status": status,
+        "network": network_status
     }
 
 

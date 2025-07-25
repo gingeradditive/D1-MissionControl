@@ -29,6 +29,11 @@ export default function App() {
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
+        network: {
+          connected: false,
+          ssid: "",
+          strength: 0
+        }
       }}
     >
       <Container
