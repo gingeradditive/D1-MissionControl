@@ -17,6 +17,20 @@ SETPOINT_FILE = "setpoint.txt"
 class DryerController:
 
     def __init__(self):
+        self.last_heater_action = time.time()
+        self.heater_pulse_duration = 3  # secondi
+        self.heater_pause_duration = 10  # attesa tra gli impulsi
+        self.last_heater_action = time.time()
+        self.heater_pulse_duration = 3  # secondi
+
+        self.integral_error = 0.0
+        self.prev_error = 0.0
+
+        self.Kp = 5.0      # quanto più l’errore è alto, tanto meno attende
+        self.Ki = 0.1      # accumulo dell’errore nel tempo
+        self.min_pause = 5   # attesa minima tra impulsi
+        self.max_pause = 60  # attesa massima tra impulsi
+        
         set_temp = self.load_setpoint()
         self.set_temp = set_temp
         self.tolerance = set_temp * 0.01
@@ -38,8 +52,8 @@ class DryerController:
         if IS_RASPBERRY:
             self.SSR_HEATER_GPIO = 23
             self.SSR_FAN_GPIO = 24
-            self.MAX6675BUS=0
-            self.MAX6675DEVICE=0
+            self.MAX6675BUS = 0
+            self.MAX6675DEVICE = 0
             GPIO.setmode(GPIO.BCM)
 
             GPIO.setup(self.SSR_HEATER_GPIO, GPIO.OUT)
@@ -77,7 +91,7 @@ class DryerController:
             value = (raw[0] << 8) | raw[1]
             if value & 0x4:
                 return None
-            temp = (value >> 3) * 0.25           
+            temp = (value >> 3) * 0.25
             hum = 0.0
         else:
             # Variazione lenta
@@ -96,21 +110,39 @@ class DryerController:
             (now, temp, hum, self.heater_status, self.fan_status))
         return now, temp, hum
 
-    def update_heater(self, temp):
+    def update_heater_pid_discrete(self, temp):
         if not self.dryer_status:
             if IS_RASPBERRY:
                 GPIO.output(self.SSR_HEATER_GPIO, GPIO.LOW)
             self.heater_status = False
             return
 
-        if temp < self.set_temp - self.tolerance:
-            if IS_RASPBERRY:
-                GPIO.output(self.SSR_HEATER_GPIO, GPIO.HIGH)
-            self.heater_status = True
-        elif temp > self.set_temp + self.tolerance:
+        now = time.time()
+        error = self.set_temp - temp
+
+        # Calcolo integrale (area sotto l'errore nel tempo)
+        self.integral_error += error * 1.0  # tempo tra campioni: 1s
+
+        # Calcolo tempo di attesa proporzionale all’errore
+        raw_pause = self.max_pause - (self.Kp * error + self.Ki * self.integral_error)
+        pause_duration = max(self.min_pause, min(self.max_pause, raw_pause))
+
+        # Accendi solo se spento da abbastanza tempo e serve calore
+        if error > self.tolerance and not self.heater_status:
+            if now - self.last_heater_action >= pause_duration:
+                if IS_RASPBERRY:
+                    GPIO.output(self.SSR_HEATER_GPIO, GPIO.HIGH)
+                self.heater_status = True
+                self.last_heater_action = now
+                print(f"[+{error:.2f}°C] Heater ON per {self.heater_pulse_duration}s (pause: {pause_duration:.1f}s)")
+
+        # Spegni dopo 3 secondi
+        elif self.heater_status and now - self.last_heater_action >= self.heater_pulse_duration:
             if IS_RASPBERRY:
                 GPIO.output(self.SSR_HEATER_GPIO, GPIO.LOW)
             self.heater_status = False
+            self.last_heater_action = now
+            print("Heater OFF")
 
     def log(self, timestamp, temp, hum):
         with open(self.log_file, "a") as f:
@@ -270,12 +302,12 @@ class DryerController:
 
 # --- Esempio di utilizzo in un loop principale ---
 if __name__ == "__main__":
-    controller = DryerController(set_temp=45.0)
+    controller = DryerController()
 
     try:
         while True:
             now, temp, hum = controller.read_sensor()
-            controller.update_heater(temp)
+            controller.update_heater_pid_discrete(temp)
             controller.log(now, temp, hum)
             time.sleep(1)
 
