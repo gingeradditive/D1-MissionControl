@@ -1,12 +1,9 @@
 import time
 import random
-import sys
 from datetime import datetime, timedelta
 from collections import deque
 
 try:
-    import board
-    import adafruit_sht4x
     import spidev
     import time
     import RPi.GPIO as GPIO
@@ -15,17 +12,17 @@ except (ImportError, NotImplementedError):
     IS_RASPBERRY = False
 
 SETPOINT_FILE = "setpoint.txt"
-SENSOR_TYPE = "SHT4X"  # or "SHT4X"
+
 
 class DryerController:
 
     def __init__(self):
         self.last_heater_action = time.time()
-        self.heater_pulse_duration = 3  # secondi
-        self.Kp = 2.0       # più basso → reazione più lenta
-        self.Ki = 0.05      # aiuta l'integrale ad accumulare gradualmente
-        self.min_pause = 5   # attesa minima di 5s tra impulsi
-        self.max_pause = 90  # attesa massima se vicino al setpoint
+        self.heater_pulse_duration = 10  # secondi
+        self.Kp = 5.0      # quanto più l’errore è alto, tanto meno attende
+        self.Ki = 0.1      # accumulo dell’errore nel tempo
+        self.min_pause = 5   # attesa minima tra impulsi
+        self.max_pause = 60  # attesa massima tra impulsi
         
         self.integral_error = 0.0
         self.prev_error = 0.0
@@ -60,15 +57,10 @@ class DryerController:
             GPIO.output(self.SSR_HEATER_GPIO, GPIO.LOW)
             GPIO.output(self.SSR_FAN_GPIO, GPIO.LOW)
 
-            if SENSOR_TYPE == "MAX6675":
-                self.spi = spidev.SpiDev()
-                self.spi.open(self.MAX6675BUS, self.MAX6675DEVICE)
-                self.spi.max_speed_hz = 5000000
-                self.spi.mode = 0b00
-            elif SENSOR_TYPE == "SHT4X":
-                self.i2c = board.I2C()
-                self.sht = adafruit_sht4x.SHT4x(self.i2c)
-                self.sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
+            self.spi = spidev.SpiDev()
+            self.spi.open(self.MAX6675BUS, self.MAX6675DEVICE)
+            self.spi.max_speed_hz = 5000000
+            self.spi.mode = 0b00
 
     def start(self):
         if not self.dryer_status:
@@ -88,17 +80,14 @@ class DryerController:
 
     def read_sensor(self):
         if IS_RASPBERRY:
-            if SENSOR_TYPE == "MAX6675":
-                raw = self.spi.readbytes(2)
-                if len(raw) != 2:
-                    return None
-                value = (raw[0] << 8) | raw[1]
-                if value & 0x4:
-                    return None
-                temp = (value >> 3) * 0.25
-                hum = 0.0
-            elif SENSOR_TYPE == "SHT4X":
-                temp, hum = self.sht.measurements
+            raw = self.spi.readbytes(2)
+            if len(raw) != 2:
+                return None
+            value = (raw[0] << 8) | raw[1]
+            if value & 0x4:
+                return None
+            temp = (value >> 3) * 0.25
+            hum = 0.0
         else:
             # Variazione lenta
             self.prev_temp += random.uniform(-0.5, 0.5)
@@ -126,16 +115,12 @@ class DryerController:
         now = time.time()
         error = self.set_temp - temp
 
-        # PID discreto semplificato
-        self.integral_error += error  # oppure: error * dt se dt ≠ 1s
+        # Calcolo integrale (area sotto l'errore nel tempo)
+        self.integral_error += error * 1.0  # tempo tra campioni: 1s
 
-        max_error = 50.0
-        normalized_error = min(max(error, 0.0), max_error) / max_error
-
-        # Calcolo pausa: base sulla distanza + integrale
-        base_pause = self.max_pause * (1 - normalized_error)
-        correction = self.Ki * self.integral_error
-        pause_duration = min(self.max_pause, max(self.min_pause, base_pause - correction))
+        # Calcolo tempo di attesa proporzionale all’errore
+        raw_pause = self.max_pause - (self.Kp * error + self.Ki * self.integral_error)
+        pause_duration = max(self.min_pause, min(self.max_pause, raw_pause))
 
         # Accendi solo se spento da abbastanza tempo e serve calore
         if error > self.tolerance and not self.heater_status:
