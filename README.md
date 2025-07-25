@@ -40,9 +40,9 @@ https://learn.microsoft.com/it-it/dotnet/iot/media/gpio-pinout-diagram.png
 
 |                     |                      |                        |                     |
 |--------------------:|---------------------:|------------------------|---------------------|
-| MAX6675 (3V3)       | **+3V3**             | **+5V**                |                     |
-|                     | **GPIO 2 (SDA)**     | **+5V**                | DEVKIT (+5V)        |
-|                     | **GPIO 3 (SCL)**     | **GND**                | DEVKIT (GND)        |
+| MAX6675 (3V3)       | **+3V3**             | **+5V**                | SHT4X (+5V)         |
+| SHT4X (SDA)         | **GPIO 2 (SDA)**     | **+5V**                | DEVKIT (+5V)        |
+| SHT4X (SCL)         | **GPIO 3 (SCL)**     | **GND**                | DEVKIT (GND)        |
 |                     | **GPIO 4 (GPCLK0)**  | **GPIO 14 (TXD**)      |                     |
 | MAX6675 (GND)       | **GND**              | **GPIO 15 (RXD**)      |                     |
 |                     | **GPIO 17**          | **GPIO 18 (PCM_CLK**)  |                     |
@@ -59,4 +59,4 @@ https://learn.microsoft.com/it-it/dotnet/iot/media/gpio-pinout-diagram.png
 |                     | **GPIO 13 (PWM1)**   | **GND**                |                     |
 |                     | **GPIO 19 (PCM_FS)** | **GPIO 16**            |                     |
 |                     | **GPIO 26**          | **GPIO 20 (PCM_DIN**)  |                     |
-|                     | **GND**              | **GPIO 21 (PCM_DOUT**) |                     |
+| SHT4X (GND)         | **GND**              | **GPIO 21 (PCM_DOUT**) |                     |

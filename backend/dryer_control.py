@@ -1,9 +1,12 @@
 import time
 import random
+import sys
 from datetime import datetime, timedelta
 from collections import deque
 
 try:
+    import board
+    import adafruit_sht4x
     import spidev
     import time
     import RPi.GPIO as GPIO
@@ -12,7 +15,7 @@ except (ImportError, NotImplementedError):
     IS_RASPBERRY = False
 
 SETPOINT_FILE = "setpoint.txt"
-
+SENSOR_TYPE = "SHT4X"  # or "SHT4X"
 
 class DryerController:
 
@@ -57,10 +60,15 @@ class DryerController:
             GPIO.output(self.SSR_HEATER_GPIO, GPIO.LOW)
             GPIO.output(self.SSR_FAN_GPIO, GPIO.LOW)
 
-            self.spi = spidev.SpiDev()
-            self.spi.open(self.MAX6675BUS, self.MAX6675DEVICE)
-            self.spi.max_speed_hz = 5000000
-            self.spi.mode = 0b00
+            if SENSOR_TYPE == "MAX6675":
+                self.spi = spidev.SpiDev()
+                self.spi.open(self.MAX6675BUS, self.MAX6675DEVICE)
+                self.spi.max_speed_hz = 5000000
+                self.spi.mode = 0b00
+            elif SENSOR_TYPE == "SHT4X":
+                self.i2c = board.I2C()
+                self.sht = adafruit_sht4x.SHT4x(self.i2c)
+                self.sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
 
     def start(self):
         if not self.dryer_status:
@@ -80,14 +88,17 @@ class DryerController:
 
     def read_sensor(self):
         if IS_RASPBERRY:
-            raw = self.spi.readbytes(2)
-            if len(raw) != 2:
-                return None
-            value = (raw[0] << 8) | raw[1]
-            if value & 0x4:
-                return None
-            temp = (value >> 3) * 0.25
-            hum = 0.0
+            if SENSOR_TYPE == "MAX6675":
+                raw = self.spi.readbytes(2)
+                if len(raw) != 2:
+                    return None
+                value = (raw[0] << 8) | raw[1]
+                if value & 0x4:
+                    return None
+                temp = (value >> 3) * 0.25
+                hum = 0.0
+            elif SENSOR_TYPE == "SHT4X":
+                temp, hum = self.sht.measurements
         else:
             # Variazione lenta
             self.prev_temp += random.uniform(-0.5, 0.5)
