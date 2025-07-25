@@ -124,7 +124,7 @@ def get_ip():
 
 @app.get("/g1os")
 def check_g1os():
-    return {"status": network.nerwork_has_g1os()}
+    return {"status": network.network_has_g1os()}
     
     
 @app.on_event("shutdown")
