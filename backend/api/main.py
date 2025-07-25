@@ -25,7 +25,7 @@ def background_loop():
     global running
     while running:
         now, temp, hum = dryer.read_sensor()
-        dryer.update_heater(temp)
+        dryer.update_heater_pid_discrete(temp)
         if time.time() - dryer.log_timer >= 10:
             dryer.log_timer = time.time()
             dryer.log(now.strftime('%Y-%m-%d %H:%M:%S'), temp, hum)
