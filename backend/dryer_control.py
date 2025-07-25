@@ -21,11 +21,11 @@ class DryerController:
 
     def __init__(self):
         self.last_heater_action = time.time()
-        self.heater_pulse_duration = 10  # secondi
-        self.Kp = 5.0      # quanto più l’errore è alto, tanto meno attende
-        self.Ki = 0.1      # accumulo dell’errore nel tempo
-        self.min_pause = 5   # attesa minima tra impulsi
-        self.max_pause = 60  # attesa massima tra impulsi
+        self.heater_pulse_duration = 3  # secondi
+        self.Kp = 2.0       # più basso → reazione più lenta
+        self.Ki = 0.05      # aiuta l'integrale ad accumulare gradualmente
+        self.min_pause = 5   # attesa minima di 5s tra impulsi
+        self.max_pause = 90  # attesa massima se vicino al setpoint
         
         self.integral_error = 0.0
         self.prev_error = 0.0
@@ -126,12 +126,16 @@ class DryerController:
         now = time.time()
         error = self.set_temp - temp
 
-        # Calcolo integrale (area sotto l'errore nel tempo)
-        self.integral_error += error * 1.0  # tempo tra campioni: 1s
+        # PID discreto semplificato
+        self.integral_error += error  # oppure: error * dt se dt ≠ 1s
 
-        # Calcolo tempo di attesa proporzionale all’errore
-        raw_pause = self.max_pause - (self.Kp * error + self.Ki * self.integral_error)
-        pause_duration = max(self.min_pause, min(self.max_pause, raw_pause))
+        max_error = 50.0
+        normalized_error = min(max(error, 0.0), max_error) / max_error
+
+        # Calcolo pausa: base sulla distanza + integrale
+        base_pause = self.max_pause * (1 - normalized_error)
+        correction = self.Ki * self.integral_error
+        pause_duration = min(self.max_pause, max(self.min_pause, base_pause - correction))
 
         # Accendi solo se spento da abbastanza tempo e serve calore
         if error > self.tolerance and not self.heater_status:
