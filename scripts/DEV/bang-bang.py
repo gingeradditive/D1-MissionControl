@@ -35,9 +35,9 @@ log_timer = time.time()
 
 console = Console()
 
-def log_to_file(timestamp, temp, hum, heater_status):
+def log_to_file(timestamp, temp, hum, ssr_heater):
     with open(log_file, "a") as f:
-        f.write(f"{timestamp},{temp:.2f},{hum:.2f},{heater_status},{set_temp:.2f}\n")
+        f.write(f"{timestamp},{temp:.2f},{hum:.2f},{ssr_heater},{set_temp:.2f}\n")
 
 
 def create_graph(history):
@@ -64,7 +64,7 @@ def create_graph(history):
     return graph
 
 
-def make_interface(current_temp, current_hum, heater_status):
+def make_interface(current_temp, current_hum, ssr_heater):
     table = Table(title="SHT4x Temperature Monitor", expand=True)
     table.add_column("Parameter", justify="right")
     table.add_column("Value", justify="left")
@@ -72,7 +72,7 @@ def make_interface(current_temp, current_hum, heater_status):
     table.add_row("Setpoint", f"{set_temp:.1f} °C")
     table.add_row("Current Temp", f"{current_temp:.1f} °C")
     table.add_row("Humidity", f"{current_hum:.1f} %")
-    table.add_row("Heater SSR", "ON 🔥" if heater_status else "OFF ❄️")
+    table.add_row("Heater SSR", "ON 🔥" if ssr_heater else "OFF ❄️")
 
     graph = create_graph(temp_history)
     return Panel.fit(table, title="Status"), Panel.fit(graph, title="Temp History")
@@ -92,16 +92,16 @@ try:
             # Logica SSR
             if temp < set_temp - tolerance:
                 GPIO.output(SSR_GPIO, GPIO.HIGH)
-                heater_status = True
+                ssr_heater = True
             elif temp > set_temp + tolerance:
                 GPIO.output(SSR_GPIO, GPIO.LOW)
-                heater_status = False
+                ssr_heater = False
 
-            temp_history.append((now, temp, heater_status))
+            temp_history.append((now, temp, ssr_heater))
 
             # Log ogni 10s
-            log_to_file(now_str, temp, hum, heater_status)
-            status_panel, graph_panel = make_interface(temp, hum, heater_status)
+            log_to_file(now_str, temp, hum, ssr_heater)
+            status_panel, graph_panel = make_interface(temp, hum, ssr_heater)
 
             layout = Table.grid(expand=True)
             layout.add_row(status_panel)

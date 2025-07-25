@@ -24,11 +24,12 @@ running = True
 def background_loop():
     global running
     while running:
-        now, temp, hum = dryer.read_sensor()
-        dryer.update_heater_pid_discrete(temp)
+        now, max6675_temp, sht40_hum, sht40_temp = dryer.read_sensor()
+        dryer.update_heater_pid_discrete(max6675_temp)
         if time.time() - dryer.log_timer >= 10:
             dryer.log_timer = time.time()
-            dryer.log(now.strftime('%Y-%m-%d %H:%M:%S'), temp, hum)
+            dryer.log(now.strftime('%Y-%m-%d %H:%M:%S'),
+                      max6675_temp, sht40_hum, sht40_temp)
         time.sleep(1)
 
 
@@ -40,14 +41,14 @@ thread.start()
 def get_status():
     latest = dryer.get_status_data()
     network_status = network.get_connection_status()
-    ts, temp, hum, heater, fan, status = latest
+    timestamp, max6675_temp, sht40_temp, sht40_hum, ssr_heater, ssr_fan, status = latest
 
     return {
         "setpoint": dryer.set_temp,
-        "current_temp": round(temp, 2),
-        "current_humidity": round(hum, 2),
-        "heater": heater,
-        "fan": fan,
+        "current_temp": round(max6675_temp, 2),
+        "current_humidity": round(sht40_hum, 2),
+        "heater": ssr_heater,
+        "fan": ssr_fan,
         "status": status,
         "network": network_status
     }
@@ -62,8 +63,6 @@ def set_status(status: bool):
         dryer.stop()
         return {"status": "Heater turned off"}
 
-    
-
 
 @app.get("/history")
 def get_status(mode: str = Query(default="1h", enum=["1m", "1h", "12h"])):
@@ -76,16 +75,16 @@ def get_status(mode: str = Query(default="1h", enum=["1m", "1h", "12h"])):
         "mode": mode,
         "history": [
             {
-                "timestamp": ts.strftime("%Y-%m-%d %H:%M:%S"),
-                "temperature": round(t, 2),
-                "humidity": round(h, 2),
-                "heater_ratio": round(r, 2),
-                "fan_ratio": round(f, 2),
-                "temp_min": round(t_min, 2),
-                "temp_max": round(t_max, 2),
-                "hum_min": round(h_min, 2),
-                "hum_max": round(h_max, 2),
-            } for ts, t, h, r, f, t_min, t_max, h_min, h_max in history
+                "timestamp": timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                "temperature": round(max6675_temp, 2),
+                "humidity": round(sht40_hum, 2),
+                "heater_ratio": round(heater_ratio, 2),
+                "fan_ratio": round(fan_ratio, 2),
+                "temp_min": round(max6675_temp_min, 2),
+                "temp_max": round(max6675_temp_max, 2),
+                "hum_min": round(sht40_hum_min, 2),
+                "hum_max": round(sht40_hum_max, 2),
+            } for timestamp, max6675_temp, sht40_hum, heater_ratio, fan_ratio, max6675_temp_min, max6675_temp_max, sht40_hum_min, sht40_hum_max in history
         ]
     }
 
@@ -125,8 +124,8 @@ def get_ip():
 @app.get("/g1os")
 def check_g1os():
     return {"status": network.network_has_g1os()}
-    
-    
+
+
 @app.on_event("shutdown")
 def on_shutdown():
     global running
