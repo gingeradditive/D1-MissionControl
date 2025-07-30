@@ -87,6 +87,8 @@ class DryerController:
 
     def read_sensor(self):
         if IS_RASPBERRY:
+            sht40_temp, sht40_hum = self.sht.measurements
+            
             raw = self.spi.readbytes(2)
             if len(raw) != 2:
                 return None
@@ -94,7 +96,6 @@ class DryerController:
             if value & 0x4:
                 return None
             max6675_temp = (value >> 3) * 0.25
-            sht40_temp, sht40_hum = self.sht.measurements
 
         else:
             # Variazione lenta
@@ -259,14 +260,12 @@ class DryerController:
 
     def get_status_data(self):
         if not self.history:
-            data = datetime.now(), 0.0, 0.0, 0.0, False
+            data = datetime.now(), 0.0, 0.0, 0.0, 0.0, 0.0, False
         else:
             # Aggiungiamo dryer_status alla tupla con i nuovi dati
             (timestamp, max6675_temp, sht40_temp, sht40_hum,
              ssr_heater, ssr_fan) = self.history[-1]
-            data = (timestamp, max6675_temp, sht40_temp, sht40_hum,
-                    ssr_heater, ssr_fan, self.dryer_status)
-
+            data = (timestamp, max6675_temp, sht40_temp, sht40_hum, ssr_heater, ssr_fan, self.dryer_status)
         return data
 
     def aggregate_data(self, data, now, interval_seconds, window_seconds):
