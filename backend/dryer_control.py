@@ -89,13 +89,12 @@ class DryerController:
         if IS_RASPBERRY:
             sht40_temp, sht40_hum = self.sht.measurements
             
+            max6675_temp = 9999
             raw = self.spi.readbytes(2)
-            if len(raw) != 2:
-                return None
-            value = (raw[0] << 8) | raw[1]
-            if value & 0x4:
-                return None
-            max6675_temp = (value >> 3) * 0.25
+            if not len(raw) != 2:
+                value = (raw[0] << 8) | raw[1]
+                if not value & 0x4:
+                    max6675_temp = (value >> 3) * 0.25
 
         else:
             # Variazione lenta
