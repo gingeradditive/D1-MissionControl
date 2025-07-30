@@ -1,7 +1,8 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from backend.dryer_control import DryerController
 from backend.network_control import NetworkController
+from backend.update_control import UpdateController
 from threading import Thread
 from datetime import datetime
 import time
@@ -9,7 +10,7 @@ import time
 app = FastAPI()
 dryer = DryerController()  # default value
 network = NetworkController()
-
+update = UpdateController(".")
 origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
@@ -125,6 +126,14 @@ def get_ip():
 def check_g1os():
     return {"status": network.network_has_g1os()}
 
+
+@app.get("/check-updates")
+def check_updates():
+    try:
+        update_applied = update.check_and_update()
+        return {"updateAvailable": update_applied}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.on_event("shutdown")
 def on_shutdown():

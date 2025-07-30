@@ -66,7 +66,7 @@ export default function Header({ network }) {
         <Typography variant="body2" my={1}>Ginger Dryer</Typography>
         <Box display="flex" alignItems="center">
           <IconButton onClick={handleOpen('chart')}><AreaChartIcon /></IconButton>
-          {/* <IconButton onClick={handleOpen('settings')}><SettingsIcon /></IconButton> */}
+          <IconButton onClick={handleOpen('settings')}><SettingsIcon /></IconButton>
         </Box>
       </Box>
 

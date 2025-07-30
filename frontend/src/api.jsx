@@ -19,4 +19,6 @@ export const api = {
   setConnection: (ssid, password) => apiClient.post("/connect", { ssid, password }),
   getIp: () => apiClient.get("/ip"),
   getG1OS: () => apiClient.get("/g1os"),
+
+  checkForUpdates: () => apiClient.get("/check-updates"),
 };
