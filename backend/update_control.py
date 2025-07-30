@@ -1,10 +1,16 @@
 import subprocess
 from pathlib import Path
 
+try:
+    import board
+    import RPi.GPIO as GPIO
+    IS_RASPBERRY = True
+except (ImportError, NotImplementedError):
+    IS_RASPBERRY = False
+
 class UpdateController:
     def __init__(self, project_path: str):
         self.project_path = Path(project_path)
-        self.services = ["dryer-frontend.service", "dryer-backend.service"]
 
     def run_command(self, command: str, cwd: Path = None) -> str:
         try:
@@ -24,14 +30,17 @@ class UpdateController:
     def git_pull(self) -> str:
         return self.run_command("git pull", cwd=self.project_path)
 
-    def restart_services(self):
-        for service in self.services:
-            self.run_command(f"sudo systemctl restart {service}")
+    def reboot_device(self):
+        if IS_RASPBERRY:
+            print("Riavvio del Raspberry Pi...")
+            self.run_command("sudo reboot")
+        else:
+            print("[DEBUG] Reboot richiesto, ma non siamo su un Raspberry Pi. Nessuna azione eseguita.")
 
     def check_and_update(self) -> bool:
         output = self.git_pull()
         if "Already up to date." in output or "Già aggiornato" in output:
-            return False  # No update
+            return False  # Nessun aggiornamento
         else:
-            self.restart_services()
-            return True  # Update was applied
+            self.reboot_device()
+            return True  # Aggiornamento trovato, riavvio richiesto
