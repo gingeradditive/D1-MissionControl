@@ -35,7 +35,7 @@ class UpdateController:
             print("Riavvio del Raspberry Pi...")
             self.run_command("sudo reboot")
         else:
-            print("[DEBUG] Reboot richiesto, ma non siamo su un Raspberry Pi. Nessuna azione eseguita.")
+            print("[DEBUG] Reboot required, but not in development environment ... No action taken.")
 
     def check_and_update(self) -> bool:
         output = self.git_pull()
