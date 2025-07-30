@@ -4,7 +4,7 @@ from pathlib import Path
 class UpdateController:
     def __init__(self, project_path: str):
         self.project_path = Path(project_path)
-        self.services = ["dryer-backend.service", "dryer-frontend.service"]
+        self.services = ["dryer-frontend.service", "dryer-backend.service"]
 
     def run_command(self, command: str, cwd: Path = None) -> str:
         try:
