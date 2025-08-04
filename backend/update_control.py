@@ -30,7 +30,11 @@ class UpdateController:
             raise RuntimeError(f"Command '{command}' failed: {e}")
 
     def git_pull(self) -> str:
+        self.mark_directory_safe()
         return self.run_command("git pull", cwd=self.project_path)
+
+    def mark_directory_safe(self):
+        self.run_command(f"git config --global --add safe.directory {self.project_path}")
 
     def install_backend_dependencies(self):
         self.run_command("./venv/bin/pip install -r requirements.txt", cwd=self.project_path)
