@@ -36,11 +36,11 @@ export default function Header() {
     api.getStatus()
       .then(res => {
         if (!res.data.network) {
-          setNetwork({ connected: false, 0});
+          setNetwork({ connected: false, strength: 0});
         }
         const isConnected = res.data.network.connected;
         const strength = res.data.network.strength || 0;
-        setNetwork({ connected: isConnected, strength });
+        setNetwork({ connected: isConnected, strength: strength });
       })
       .catch(err => console.error("Errore nel fetch /status:", err));
   }, []);
