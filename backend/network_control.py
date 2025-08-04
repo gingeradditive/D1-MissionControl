@@ -47,14 +47,14 @@ class NetworkController:
         if IS_RASPBERRY:
             try:
                 conf = f"""ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-    update_config=1
-    country=IT
+update_config=1
+country=IT
 
-    network={{
-        ssid="{ssid}"
-        psk="{password}"
-    }}
-    """
+network={{
+    ssid="{ssid}"
+    psk="{password}"
+}}
+"""
 
                 # Sovrascrive il file con tee e redirezione
                 subprocess.run(
@@ -65,7 +65,8 @@ class NetworkController:
                 )
 
                 # Ricarica la configurazione Wi-Fi
-                subprocess.run(["sudo", "wpa_cli", "-i", "wlan0", "reconfigure"], check=True)
+                subprocess.run(
+                    ["sudo", "wpa_cli", "-i", "wlan0", "reconfigure"], check=True)
 
                 return True
             except Exception as e:
