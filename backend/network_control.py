@@ -43,10 +43,8 @@ class NetworkController:
                 {"ssid": "Cafe_Free_WiFi", "strength": 40}
             ]
 
-    def connect_to_network(self, ssid: str, password: str):
-        if IS_RASPBERRY:
-            try:
-                conf = f"""ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+    def connect_to_network(ssid: str, password: str):
+        conf = f"""ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
 country=IT
 
@@ -55,25 +53,22 @@ network={{
     psk="{password}"
 }}
 """
+        try:
+            # Scrive il file come root (serve eseguire lo script con sudo)
+            subprocess.run(
+                ['sudo', 'tee', '/etc/wpa_supplicant/wpa_supplicant.conf'],
+                input=conf,
+                text=True,
+                check=True
+            )
+            # Ricarica la configurazione Wi-Fi
+            subprocess.run(['sudo', 'wpa_cli', '-i', 'wlan0', 'reconfigure'], check=True)
+            print("Configurazione Wi-Fi aggiornata e ricaricata.")
+            return True
+        except subprocess.CalledProcessError as e:
+            print(f"Errore nell'aggiornamento della rete Wi-Fi: {e}")
+            return False
 
-                # Sovrascrive il file con tee e redirezione
-                subprocess.run(
-                    ['sudo', 'tee', '/etc/wpa_supplicant/wpa_supplicant.conf'],
-                    input=conf,
-                    text=True,
-                    check=True
-                )
-
-                # Ricarica la configurazione Wi-Fi
-                subprocess.run(
-                    ["sudo", "wpa_cli", "-i", "wlan0", "reconfigure"], check=True)
-
-                return True
-            except Exception as e:
-                print(f"Errore nella connessione al Wi-Fi: {e}")
-                return False
-        else:
-            return bool(ssid and password)
 
     def get_ip(self):
         if IS_RASPBERRY:
