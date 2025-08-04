@@ -35,6 +35,9 @@ export default function Header() {
   const checkNetworkStatus = useCallback(() => {
     api.getStatus()
       .then(res => {
+        if (!res.data.network) {
+          setNetwork({ connected: false, 0});
+        }
         const isConnected = res.data.network.connected;
         const strength = res.data.network.strength || 0;
         setNetwork({ connected: isConnected, strength });

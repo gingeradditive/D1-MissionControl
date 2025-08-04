@@ -83,25 +83,47 @@ class NetworkController:
                 output = subprocess.check_output(
                     ['iwconfig'], stderr=subprocess.DEVNULL, encoding='utf-8'
                 )
-                lines = output.splitlines()
-                for line in lines:
+
+                connected = False
+                ssid = None
+                strength = 0
+
+                current_interface = None
+
+                for line in output.splitlines():
+                    line = line.strip()
+                    
+                    # Detect the interface line (e.g., wlan0)
+                    if line and not line.startswith(' '):
+                        current_interface = line.split()[0]
+
                     if "ESSID" in line:
-                        if "off/any" in line:
-                            return {"connected": False, "ssid": None, "strength": 0}
-                    if "Link Quality" in line:
-                        parts = line.strip().split()
+                        if "off/any" in line or 'ESSID:""' in line:
+                            connected = False
+                            ssid = None
+                        else:
+                            connected = True
+                            ssid = line.split('ESSID:')[1].strip().strip('"')
+
+                    if "Signal level" in line:
+                        parts = line.split()
                         for part in parts:
-                            if "Signal level" in part:
-                                level = int(part.split("=")[1].replace("dBm", ""))
-                                # Convert dBm to a pseudo-percentage
-                                strength = max(0, min(100, 2 * (level + 100)))  # e.g., -50 dBm → ~100%
-                                return {"connected": True, "ssid": self.get_current_ssid(), "strength": strength}
+                            if "level=" in part:
+                                try:
+                                    level = int(part.split("=")[1].replace("dBm", ""))
+                                    strength = max(0, min(100, 2 * (level + 100)))
+                                except:
+                                    pass
+
+                return {"connected": connected, "ssid": ssid, "strength": strength}
+
             except Exception as e:
                 print(f"Errore get_connection_status: {e}")
                 return {"connected": False, "ssid": None, "strength": 0}
         else:
             # Mock per ambiente non-Raspberry
             return {"connected": True, "ssid": "Mock_Network", "strength": 72}
+
 
     def get_current_ssid(self):
         try:
