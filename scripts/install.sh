@@ -123,9 +123,5 @@ sudo systemctl enable dryer-frontend.service
 echo "📂 Creo cartella per i log dell'applicazione..."
 mkdir -p "$PROJECT_DIR/logs"
 
-echo "🔧 Imposto permessi per la cartella del progetto..."
-sudo chown -R root:root /home/pi/gingerDryer
-sudo git config --global --add safe.directory /home/pi/gingerDryer
-
 echo "🔄 Riavvio il sistema per applicare le modifiche..."
 sudo reboot
