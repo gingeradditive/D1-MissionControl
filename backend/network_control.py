@@ -43,7 +43,7 @@ class NetworkController:
                 {"ssid": "Cafe_Free_WiFi", "strength": 40}
             ]
 
-    def connect_to_network(self, ssid: str, password: str) -> bool:
+    def connect_to_network(self, ssid: str, password: str):
         conf = f"""
 network={{
     ssid="{ssid}"
