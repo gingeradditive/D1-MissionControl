@@ -43,7 +43,7 @@ class NetworkController:
                 {"ssid": "Cafe_Free_WiFi", "strength": 40}
             ]
 
-    def connect_to_network(ssid: str, password: str):
+    def connect_to_network(self, ssid: str, password: str):
         conf = f"""ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
 country=IT
