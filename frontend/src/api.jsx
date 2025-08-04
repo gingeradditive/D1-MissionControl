@@ -16,7 +16,7 @@ export const api = {
   setPoint: (value) => apiClient.post(`/setpoint/${value}`),
   
   getNetworks: () => apiClient.get("/networks"),
-  setConnection: (ssid, password) => apiClient.post("/connect", { ssid, password }),
+  setConnection: (ssid, password) => apiClient.post(`/connect/${ssid}/${password}`),
   getIp: () => apiClient.get("/ip"),
   getG1OS: () => apiClient.get("/g1os"),
 
