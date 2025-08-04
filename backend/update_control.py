@@ -11,6 +11,8 @@ except (ImportError, NotImplementedError):
 class UpdateController:
     def __init__(self, project_path: str):
         self.project_path = Path(project_path)
+        self.frontend_path = self.project_path / "frontend"
+        self.venv_path = self.project_path / "venv"
 
     def run_command(self, command: str, cwd: Path = None) -> str:
         try:
@@ -30,17 +32,33 @@ class UpdateController:
     def git_pull(self) -> str:
         return self.run_command("git pull", cwd=self.project_path)
 
+    def install_backend_dependencies(self):
+        self.run_command("source venv/bin/activate && pip install -r requirements.txt", cwd=self.project_path)
+
+    def build_frontend(self):
+        self.run_command("npm install", cwd=self.frontend_path)
+        self.run_command("npm run build", cwd=self.frontend_path)
+
     def reboot_device(self):
         if IS_RASPBERRY:
             print("Riavvio del Raspberry Pi...")
             self.run_command("sudo reboot")
         else:
-            print("[DEBUG] Reboot required, but not in development environment ... No action taken.")
+            print("[DEBUG] Reboot skipped (non-Raspberry environment)")
 
-    def check_and_update(self) -> bool:
+    def full_update(self) -> bool:
+        print("🔄 Eseguo git pull...")
         output = self.git_pull()
         if "Already up to date." in output or "Già aggiornato" in output:
-            return False  # Nessun aggiornamento
-        else:
-            self.reboot_device()
-            return True  # Aggiornamento trovato, riavvio richiesto
+            print("✅ Nessun aggiornamento trovato.")
+            return False
+
+        print("📦 Aggiorno dipendenze backend...")
+        self.install_backend_dependencies()
+
+        print("🧱 Ricostruisco il frontend...")
+        self.build_frontend()
+
+        print("🔁 Riavvio necessario, lo eseguo ora...")
+        self.reboot_device()
+        return True
