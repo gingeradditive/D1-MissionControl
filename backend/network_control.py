@@ -17,7 +17,8 @@ class NetworkController:
     def get_networks(self):
         if IS_RASPBERRY:
             try:
-                output = subprocess.check_output(['nmcli', '-t', '-f', 'SSID,SIGNAL', 'dev', 'wifi'], encoding='utf-8')
+                output = subprocess.check_output(
+                    ['nmcli', '-t', '-f', 'SSID,SIGNAL', 'dev', 'wifi'], encoding='utf-8')
                 network_map = {}
                 for line in output.strip().split('\n'):
                     if line:
@@ -27,7 +28,8 @@ class NetworkController:
                             if ssid not in network_map or signal > network_map[ssid]:
                                 network_map[ssid] = signal
                 # Converte il dizionario in una lista di dizionari
-                networks = [{"ssid": ssid, "strength": signal} for ssid, signal in network_map.items()]
+                networks = [{"ssid": ssid, "strength": signal}
+                            for ssid, signal in network_map.items()]
                 self.networks = networks
                 return networks
             except Exception as e:
@@ -44,16 +46,24 @@ class NetworkController:
     def connect_to_network(self, ssid: str, password: str):
         if IS_RASPBERRY:
             try:
-                result = subprocess.run(
-                    ['nmcli', 'dev', 'wifi', 'connect', ssid, 'password', password],
-                    capture_output=True, text=True
-                )
-                return result.returncode == 0
+                # Crea la configurazione temporanea
+                conf = f'''
+    network={{
+        ssid="{ssid}"
+        psk="{password}"
+    }}
+    '''
+                with open("/etc/wpa_supplicant/wpa_supplicant.conf", "a") as f:
+                    f.write(conf)
+
+                # Ricarica wpa_supplicant
+                subprocess.run(["wpa_cli", "-i", "wlan0",
+                               "reconfigure"], check=True)
+                return True
             except Exception as e:
                 print(f"Errore nella connessione al Wi-Fi: {e}")
                 return False
         else:
-            # Simula successo se password è non vuota
             return bool(ssid and password)
 
     def get_ip(self):
@@ -92,7 +102,7 @@ class NetworkController:
 
                 for line in output.splitlines():
                     line = line.strip()
-                    
+
                     # Detect the interface line (e.g., wlan0)
                     if line and not line.startswith(' '):
                         current_interface = line.split()[0]
@@ -110,8 +120,10 @@ class NetworkController:
                         for part in parts:
                             if "level=" in part:
                                 try:
-                                    level = int(part.split("=")[1].replace("dBm", ""))
-                                    strength = max(0, min(100, 2 * (level + 100)))
+                                    level = int(part.split("=")[
+                                                1].replace("dBm", ""))
+                                    strength = max(
+                                        0, min(100, 2 * (level + 100)))
                                 except:
                                     pass
 
@@ -124,10 +136,10 @@ class NetworkController:
             # Mock per ambiente non-Raspberry
             return {"connected": True, "ssid": "Mock_Network", "strength": 72}
 
-
     def get_current_ssid(self):
         try:
-            output = subprocess.check_output(['iwgetid', '-r'], encoding='utf-8').strip()
+            output = subprocess.check_output(
+                ['iwgetid', '-r'], encoding='utf-8').strip()
             return output if output else None
         except Exception:
             return None
