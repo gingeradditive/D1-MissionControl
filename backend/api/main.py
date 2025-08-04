@@ -130,7 +130,7 @@ def check_g1os():
 @app.get("/check-updates")
 def check_updates():
     try:
-        update_applied = update.check_and_update()
+        update_applied = update.full_update()
         return {"updateAvailable": update_applied}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
