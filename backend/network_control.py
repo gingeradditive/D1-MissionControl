@@ -43,31 +43,21 @@ class NetworkController:
                 {"ssid": "Cafe_Free_WiFi", "strength": 40}
             ]
 
-    def connect_to_network(self, ssid: str, password: str):
-        conf = f"""ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-update_config=1
-country=IT
-
-network={{
-    ssid="{ssid}"
-    psk="{password}"
-}}
-"""
-        try:
-            # Scrive il file come root (serve eseguire lo script con sudo)
-            subprocess.run(
-                ['sudo', 'tee', '/etc/wpa_supplicant/wpa_supplicant.conf'],
-                input=conf,
-                text=True,
-                check=True
-            )
-            # Ricarica la configurazione Wi-Fi
-            subprocess.run(['sudo', 'wpa_cli', '-i', 'wlan0', 'reconfigure'], check=True)
-            print("Configurazione Wi-Fi aggiornata e ricaricata.")
-            return True
-        except subprocess.CalledProcessError as e:
-            print(f"Errore nell'aggiornamento della rete Wi-Fi: {e}")
-            return False
+    class NetworkManager:
+        def connect_to_network(self, ssid: str, password: str) -> bool:
+            conf = f"""
+    network={{
+        ssid="{ssid}"
+        psk="{password}"
+    }}
+    """
+            try:
+                with open('/etc/wpa_supplicant/wpa_supplicant.conf', 'a') as f:
+                    f.write(conf)
+                result = subprocess.run(['wpa_cli', '-i', 'wlan0', 'reconfigure'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                return result.returncode == 0
+            except Exception:
+                return False
 
 
     def get_ip(self):
