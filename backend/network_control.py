@@ -46,19 +46,27 @@ class NetworkController:
     def connect_to_network(self, ssid: str, password: str):
         if IS_RASPBERRY:
             try:
-                # Crea la configurazione temporanea
-                conf = f'''
+                conf = f"""ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+    update_config=1
+    country=IT
+
     network={{
         ssid="{ssid}"
         psk="{password}"
     }}
-    '''
-                with open("/etc/wpa_supplicant/wpa_supplicant.conf", "a") as f:
-                    f.write(conf)
+    """
 
-                # Ricarica wpa_supplicant
-                subprocess.run(["wpa_cli", "-i", "wlan0",
-                               "reconfigure"], check=True)
+                # Sovrascrive il file con tee e redirezione
+                subprocess.run(
+                    ['sudo', 'tee', '/etc/wpa_supplicant/wpa_supplicant.conf'],
+                    input=conf,
+                    text=True,
+                    check=True
+                )
+
+                # Ricarica la configurazione Wi-Fi
+                subprocess.run(["sudo", "wpa_cli", "-i", "wlan0", "reconfigure"], check=True)
+
                 return True
             except Exception as e:
                 print(f"Errore nella connessione al Wi-Fi: {e}")
