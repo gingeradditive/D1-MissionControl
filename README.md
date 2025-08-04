@@ -60,4 +60,3 @@ https://learn.microsoft.com/it-it/dotnet/iot/media/gpio-pinout-diagram.png
 |                     | **GPIO 19 (PCM_FS)** | **GPIO 16**            |                     |
 |                     | **GPIO 26**          | **GPIO 20 (PCM_DIN**)  |                     |
 | SHT4X (GND)         | **GND**              | **GPIO 21 (PCM_DOUT**) |                     |
-
