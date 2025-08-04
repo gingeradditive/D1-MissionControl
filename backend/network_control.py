@@ -17,14 +17,17 @@ class NetworkController:
     def get_networks(self):
         if IS_RASPBERRY:
             try:
-                # Usa il comando 'nmcli' per elencare le reti Wi-Fi
                 output = subprocess.check_output(['nmcli', '-t', '-f', 'SSID,SIGNAL', 'dev', 'wifi'], encoding='utf-8')
-                networks = []
+                network_map = {}
                 for line in output.strip().split('\n'):
                     if line:
                         ssid, signal = line.split(":")
+                        signal = int(signal)
                         if ssid:  # Evita SSID vuoti
-                            networks.append({"ssid": ssid, "strength": int(signal)})
+                            if ssid not in network_map or signal > network_map[ssid]:
+                                network_map[ssid] = signal
+                # Converte il dizionario in una lista di dizionari
+                networks = [{"ssid": ssid, "strength": signal} for ssid, signal in network_map.items()]
                 self.networks = networks
                 return networks
             except Exception as e:
@@ -56,8 +59,10 @@ class NetworkController:
     def get_ip(self):
         if IS_RASPBERRY:
             try:
-                hostname = socket.gethostname()
-                ip = socket.gethostbyname(hostname)
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.connect(("8.8.8.8", 80))
+                ip = s.getsockname()[0]
+                s.close()
                 return ip
             except Exception as e:
                 print(f"Errore nel recupero IP: {e}")

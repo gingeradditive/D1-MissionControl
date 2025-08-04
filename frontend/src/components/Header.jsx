@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
 
 import SignalWifiOffIcon from '@mui/icons-material/SignalWifiOff';
@@ -16,12 +16,7 @@ import AlarmDialog from './AlarmDialog';
 import ChartDialog from './ChartDialog';
 import SettingsDialog from './SettingsDialog';
 
-const mockWifiList = [
-  { ssid: 'GingerNet', strength: 4 },
-  { ssid: 'DryerWiFi', strength: 2 },
-  { ssid: 'Studio 42', strength: 3 },
-  { ssid: 'OpenNet', strength: 1 },
-];
+import api from '../api'; // Assicurati che l'import sia corretto
 
 const mockChartData = Array.from({ length: 10 }, (_, i) => ({
   time: `T${i}`,
@@ -29,18 +24,29 @@ const mockChartData = Array.from({ length: 10 }, (_, i) => ({
   humidity: 50 + i * 2,
 }));
 
-export default function Header({ network }) {
+export default function Header() {
   const [openModal, setOpenModal] = useState(null);
-  const [selectedWifi, setSelectedWifi] = useState(null);
-  const [wifiPassword, setWifiPassword] = useState('');
   const [range, setRange] = useState('1h');
+  const [network, setNetwork] = useState({ connected: false, strength: 0 });
 
   const handleOpen = (modal) => () => setOpenModal(modal);
-  const handleClose = () => {
-    setOpenModal(null);
-    setSelectedWifi(null);
-    setWifiPassword('');
-  };
+  const handleClose = () => setOpenModal(null);
+
+  const checkNetworkStatus = useCallback(() => {
+    api.getStatus()
+      .then(res => {
+        const isConnected = res.data.network.connected;
+        const strength = res.data.network.strength || 0;
+        setNetwork({ connected: isConnected, strength });
+      })
+      .catch(err => console.error("Errore nel fetch /status:", err));
+  }, []);
+
+  useEffect(() => {
+    checkNetworkStatus(); // al mount
+    const interval = setInterval(checkNetworkStatus, 10 * 60 * 1000); // ogni 10 minuti
+    return () => clearInterval(interval); // cleanup
+  }, [checkNetworkStatus]);
 
   const getWifiIcon = (network) => {
     if (!network?.connected) return <SignalWifiOffIcon />;
@@ -52,7 +58,6 @@ export default function Header({ network }) {
     return <SignalWifi1BarIcon />;
   };
 
-
   return (
     <>
       <Box display="flex" justifyContent="space-between" color="gray">
@@ -60,7 +65,6 @@ export default function Header({ network }) {
           <IconButton onClick={handleOpen('wifi')}>
             {getWifiIcon(network)}
           </IconButton>
-
           <IconButton onClick={handleOpen('alarm')}><AccessAlarmIcon /></IconButton>
         </Box>
         <Typography variant="body2" my={1}>Ginger Dryer</Typography>
@@ -72,12 +76,10 @@ export default function Header({ network }) {
 
       <WifiDialog
         open={openModal === 'wifi'}
-        onClose={handleClose}
-        wifiList={mockWifiList}
-        selectedWifi={selectedWifi}
-        setSelectedWifi={setSelectedWifi}
-        wifiPassword={wifiPassword}
-        setWifiPassword={setWifiPassword}
+        onClose={() => {
+          handleClose();
+          checkNetworkStatus(); // aggiorna stato rete alla chiusura del dialog
+        }}
       />
 
       <AlarmDialog open={openModal === 'alarm'} onClose={handleClose} />
