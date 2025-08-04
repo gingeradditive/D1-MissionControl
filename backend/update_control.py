@@ -33,7 +33,7 @@ class UpdateController:
         return self.run_command("git pull", cwd=self.project_path)
 
     def install_backend_dependencies(self):
-        self.run_command("source venv/bin/activate && pip install -r requirements.txt", cwd=self.project_path)
+        self.run_command("./venv/bin/pip install -r requirements.txt", cwd=self.project_path)
 
     def build_frontend(self):
         self.run_command("npm install", cwd=self.frontend_path)
