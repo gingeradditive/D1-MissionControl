@@ -16,7 +16,7 @@ import AlarmDialog from './AlarmDialog';
 import ChartDialog from './ChartDialog';
 import SettingsDialog from './SettingsDialog';
 
-import api from '../api'; // Assicurati che l'import sia corretto
+import { api } from '../api'; // Assicurati che l'import sia corretto
 
 const mockChartData = Array.from({ length: 10 }, (_, i) => ({
   time: `T${i}`,
