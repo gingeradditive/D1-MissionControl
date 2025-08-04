@@ -56,15 +56,17 @@ class NetworkController:
             if result.returncode == 0:
                 print(f"Connesso con successo a {ssid}")
                 print(result.stdout)
+                return True
             else:
                 print(f"Errore durante la connessione a {ssid}:")
                 print(result.stderr)
+                return False
 
         except Exception as e:
             print("Errore durante l'esecuzione del comando:")
             print(str(e))
-
-
+            return False
+        
 
     def get_ip(self):
         if IS_RASPBERRY:
