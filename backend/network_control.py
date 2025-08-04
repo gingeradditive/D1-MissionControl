@@ -42,21 +42,28 @@ class NetworkController:
                 {"ssid": "Office_Net", "strength": 80},
                 {"ssid": "Cafe_Free_WiFi", "strength": 40}
             ]
+        
 
     def connect_to_network(self, ssid: str, password: str):
-        conf = f"""
-network={{
-    ssid="{ssid}"
-    psk="{password}"
-}}
-"""
         try:
-            with open('/etc/wpa_supplicant/wpa_supplicant.conf', 'a') as f:
-                f.write(conf)
-            result = subprocess.run(['wpa_cli', '-i', 'wlan0', 'reconfigure'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            return result.returncode == 0
-        except Exception:
-            return False
+            # Comando per connettersi alla rete wifi con nmcli
+            result = subprocess.run(
+                ['nmcli', 'device', 'wifi', 'connect', ssid, 'password', password],
+                capture_output=True,
+                text=True
+            )
+
+            if result.returncode == 0:
+                print(f"Connesso con successo a {ssid}")
+                print(result.stdout)
+            else:
+                print(f"Errore durante la connessione a {ssid}:")
+                print(result.stderr)
+
+        except Exception as e:
+            print("Errore durante l'esecuzione del comando:")
+            print(str(e))
+
 
 
     def get_ip(self):

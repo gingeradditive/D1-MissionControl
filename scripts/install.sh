@@ -123,5 +123,25 @@ sudo systemctl enable dryer-frontend.service
 echo "📂 Creo cartella per i log dell'applicazione..."
 mkdir -p "$PROJECT_DIR/logs"
 
+echo "🛜 Aggiungo permessi per gestire le reti"
+sudo usermod -aG netdev $USER
+
+POLKIT_FILE="/etc/polkit-1/localauthority/50-local.d/10-nmcli.pkla"
+
+sudo bash -c "cat > $POLKIT_FILE" <<EOF
+[Allow NetworkManager all permissions for pi user]
+Identity=unix-user:pi
+Action=org.freedesktop.NetworkManager.*
+ResultAny=yes
+ResultInactive=yes
+ResultActive=yes
+EOF
+
+echo "File $POLKIT_FILE creato con successo."
+
+echo "🔄 Riavvio i servizi per applicare le modifiche..."
+sudo systemctl restart polkit
+sudo systemctl restart NetworkManager
+
 echo "🔄 Riavvio il sistema per applicare le modifiche..."
 sudo reboot
