@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  Button, List, ListItem, ListItemButton,
-  ListItemIcon, ListItemText, Divider, TextField, Typography, Box
+  Dialog, DialogTitle, DialogContent, List, ListItem, ListItemButton,
+  ListItemIcon, ListItemText, Typography, Button, Box,
+  IconButton
 } from '@mui/material';
 import WifiIcon from '@mui/icons-material/Wifi';
 import SignalWifi0Bar from '@mui/icons-material/SignalWifi0Bar';
@@ -10,12 +10,12 @@ import SignalWifi1Bar from '@mui/icons-material/SignalWifi1Bar';
 import SignalWifi2Bar from '@mui/icons-material/SignalWifi2Bar';
 import SignalWifi3Bar from '@mui/icons-material/SignalWifi3Bar';
 import SignalWifi4Bar from '@mui/icons-material/SignalWifi4Bar';
-import Keyboard from 'react-simple-keyboard';
-import 'react-simple-keyboard/build/css/index.css';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { api } from '../api';
+import WifiConnectDialog from './WifiConnectDialog';
 
 const getWifiIcon = (strength) => {
-  const level = Math.ceil(strength / 25); // strength from 0–100 mapped to 0–4
+  const level = Math.ceil(strength / 25);
   switch (level) {
     case 1: return <SignalWifi1Bar />;
     case 2: return <SignalWifi2Bar />;
@@ -25,134 +25,93 @@ const getWifiIcon = (strength) => {
   }
 };
 
-export default function WifiDialog({ open, onClose }) {
+export default function WifiListDialog({ open, onClose }) {
   const [wifiList, setWifiList] = useState([]);
-  const [selectedWifi, setSelectedWifi] = useState('');
-  const [wifiPassword, setWifiPassword] = useState('');
-  const [statusMessage, setStatusMessage] = useState('');
-  const [showKeyboard, setShowKeyboard] = useState(false);
-  const keyboardRef = useRef();
-  const isKiosk = new URLSearchParams(window.location.search).get("kiosk") === "true";
+  const [connectedNetwork, setConnectedNetwork] = useState(null);
+  const [selectedNetwork, setSelectedNetwork] = useState(null);
 
   useEffect(() => {
     if (open) {
-      setSelectedWifi('');
-      setWifiPassword('');
-      setStatusMessage('');
-      api.getNetworks()
+      api.getConnectionStatus()
+        .then(res => setConnectedNetwork(res.data))
+        .catch(err => console.error("Error fetching status:", err));
+
+      api.getConnection()
         .then(res => {
           const sorted = res.data.sort((a, b) => b.strength - a.strength);
           setWifiList(sorted);
         })
-        .catch(err => {
-          console.error("Error loading networks:", err);
-          setStatusMessage("Unable to load WiFi networks.");
-        });
+        .catch(err => console.error("Error loading networks:", err));
     }
   }, [open]);
 
-  const handleConnect = async () => {
+  const handleForget = async (ssid) => {
     try {
-      setStatusMessage('Connecting...');
-      const res = await api.setConnection(selectedWifi, wifiPassword);
-      setStatusMessage(res.data.status);
-
-      const ipRes = await api.getIp();
-      console.log("IP obtained:", ipRes.data.ip);
-
-      setStatusMessage(`Connected! IP: ${ipRes.data.ip}`);
-
-      setTimeout(() => {
-        onClose();
-        setWifiPassword('');
-        setSelectedWifi('');
-      }, 2000);
-    } catch (error) {
-      console.error("Connection error:", error);
-      setStatusMessage('Error during connection. Check your password..');
+      await api.forgetNetwork(ssid);
+      setWifiList(prev => prev.filter(n => n.ssid !== ssid));
+      if (connectedNetwork?.ssid === ssid) setConnectedNetwork(null);
+    } catch (err) {
+      console.error("Error forgetting network:", err);
     }
-  };
-
-  const onChangeInput = (e) => {
-    setWifiPassword(e.target.value);
-    if (keyboardRef.current) {
-      keyboardRef.current.setInput(e.target.value);
-    }
-  };
-
-  const onKeyboardChange = (input) => {
-    setWifiPassword(input);
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>
-        <Box display="flex" alignItems="center">
-          <WifiIcon sx={{ mr: 1 }} />
-          Select a WiFi network
-        </Box>
-      </DialogTitle>
-      <DialogContent>
-        <List>
-          {wifiList.map((network) => (
-            <ListItem key={network.ssid} disablePadding>
-              <ListItemButton
-                onClick={() => {
-                  setSelectedWifi(network.ssid);
-                  setWifiPassword('');
-                  setStatusMessage('');
-                }}
-                selected={selectedWifi === network.ssid}
-              >
-                <ListItemIcon>{getWifiIcon(network.strength)}</ListItemIcon>
-                <ListItemText primary={network.ssid} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
+    <>
+      <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+        <DialogTitle>
+          <Box display="flex" alignItems="center">
+            <WifiIcon sx={{ mr: 1 }} />
+            Available WiFi Networks
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <List>
+            {wifiList.map((network) => {
+              const isConnected = connectedNetwork?.ssid === network.ssid;
+              return (
+                <ListItem key={network.ssid} disablePadding secondaryAction={
+                  isConnected && (
+                    <IconButton onClick={() => handleForget(network.ssid)} color="error">
+                      <DeleteIcon />
+                    </IconButton>
+                  )
+                }>
+                  <ListItemButton
+                    onClick={() => setSelectedNetwork(network)}
+                    selected={selectedNetwork?.ssid === network.ssid}
+                  >
+                    <ListItemIcon>{getWifiIcon(network.strength)}</ListItemIcon>
+                    <ListItemText
+                      primary={
+                        <Box display="flex" flexDirection="column">
+                          <Typography variant="body1">{network.ssid}</Typography>
+                          {isConnected && (
+                            <Typography variant="caption" color="primary">
+                              Connected: {connectedNetwork?.ip}
+                            </Typography>
+                          )}
+                        </Box>
+                      }
+                    />
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
+          </List>
+        </DialogContent>
+      </Dialog>
 
-        {selectedWifi && (
-          <>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant="subtitle2" gutterBottom>
-              Connessione a "{selectedWifi}"
-            </Typography>
-            <TextField
-              fullWidth
-              type="password"
-              label="Password"
-              margin="normal"
-              value={wifiPassword}
-              onChange={onChangeInput}
-              onFocus={() => setShowKeyboard(true && isKiosk)}
-            />
-            {showKeyboard && (
-              <Box mt={2}>
-                <Keyboard
-                  keyboardRef={(r) => (keyboardRef.current = r)}
-                  layoutName="default"
-                  onChange={onKeyboardChange}
-                  inputName="password"
-                />
-              </Box>
-            )}
-            {statusMessage && (
-              <Typography mt={2} color="text.secondary">
-                {statusMessage}
-              </Typography>
-            )}
-          </>
-        )}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button
-          onClick={handleConnect}
-          disabled={!selectedWifi || !wifiPassword}
-        >
-          Connect
-        </Button>
-      </DialogActions>
-    </Dialog>
+      {/* Modal di connessione */}
+      {selectedNetwork && (
+        <WifiConnectDialog
+          network={selectedNetwork}
+          onClose={() => setSelectedNetwork(null)}
+          onSuccess={() => {
+            setSelectedNetwork(null);
+            onClose(); // chiude entrambi i modali
+          }}
+        />
+      )}
+    </>
   );
 }

@@ -27,20 +27,29 @@ const mockChartData = Array.from({ length: 10 }, (_, i) => ({
 export default function Header() {
   const [openModal, setOpenModal] = useState(null);
   const [range, setRange] = useState('1h');
-  const [network, setNetwork] = useState({ connected: false, strength: 0 });
+  const [network, setNetwork] = useState({
+    "connected": false,
+    "ssid": "",
+    "strength": 0,
+    "ip": "--.--.--.--"
+  });
 
   const handleOpen = (modal) => () => setOpenModal(modal);
   const handleClose = () => setOpenModal(null);
 
   const checkNetworkStatus = useCallback(() => {
-    api.getStatus()
+    api.getConnectionStatus()
       .then(res => {
-        if (!res.data.network) {
-          setNetwork({ connected: false, strength: 0});
+        if (!res.data) {
+          setNetwork({
+            "connected": false,
+            "ssid": "",
+            "strength": 0,
+            "ip": "--.--.--.--"
+          });
         }
-        const isConnected = res.data.network.connected;
-        const strength = res.data.network.strength || 0;
-        setNetwork({ connected: isConnected, strength: strength });
+        
+        setNetwork(res.data);
       })
       .catch(err => console.error("Errore nel fetch /status:", err));
   }, []);
@@ -81,7 +90,7 @@ export default function Header() {
         open={openModal === 'wifi'}
         onClose={() => {
           handleClose();
-          checkNetworkStatus(); // aggiorna stato rete alla chiusura del dialog
+          checkNetworkStatus();
         }}
       />
 

@@ -15,10 +15,10 @@ export const api = {
   getHistory: (mode) => apiClient.get(`/history`, { params: { mode } }),
   setPoint: (value) => apiClient.post(`/setpoint/${value}`),
   
-  getNetworks: () => apiClient.get("/networks"),
-  setConnection: (ssid, password) => apiClient.post(`/connect/${ssid}/${password}`),
-  getIp: () => apiClient.get("/ip"),
-  getG1OS: () => apiClient.get("/g1os"),
+  getConnection: () => apiClient.get("/connection"),
+  setConnection: (ssid, password) => apiClient.post(`/connection/${ssid}/${password}`),
+  getConnectionStatus: () => apiClient.get("/connection/status"),
+  getconnectionG1OS: () => apiClient.get("/connection/g1os"),
 
   checkForUpdates: () => apiClient.get("/check-updates"),
 };

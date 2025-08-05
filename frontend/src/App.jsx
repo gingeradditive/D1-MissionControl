@@ -14,7 +14,7 @@ export default function App() {
 
   useEffect(() => {
     const checkG1OS = async () => {
-      const result = await api.getG1OS();
+      const result = await api.getconnectionG1OS();
       setShowBackButton(result.data.status === true);
     };
     checkG1OS();

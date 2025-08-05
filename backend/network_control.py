@@ -45,43 +45,35 @@ class NetworkController:
         
 
     def connect_to_network(self, ssid: str, password: str):
-        try:
-            # Comando per connettersi alla rete wifi con nmcli
-            result = subprocess.run(
-                ['nmcli', 'device', 'wifi', 'connect', ssid, 'password', password],
-                capture_output=True,
-                text=True
-            )
-
-            if result.returncode == 0:
-                print(f"Connesso con successo a {ssid}")
-                print(result.stdout)
-                return True
-            else:
-                print(f"Errore durante la connessione a {ssid}:")
-                print(result.stderr)
-                return False
-
-        except Exception as e:
-            print("Errore durante l'esecuzione del comando:")
-            print(str(e))
-            return False
-        
-
-    def get_ip(self):
         if IS_RASPBERRY:
             try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                s.connect(("8.8.8.8", 80))
-                ip = s.getsockname()[0]
-                s.close()
-                return ip
-            except Exception as e:
-                print(f"Errore nel recupero IP: {e}")
-                return "127.0.0.1"
-        else:
-            return "192.168.1.100"
+                # Comando per connettersi alla rete wifi con nmcli
+                result = subprocess.run(
+                    ['nmcli', 'device', 'wifi', 'connect', ssid, 'password', password],
+                    capture_output=True,
+                    text=True
+                )
 
+                if result.returncode == 0:
+                    print(f"Connesso con successo a {ssid}")
+                    print(result.stdout)
+                    return True
+                else:
+                    print(f"Errore durante la connessione a {ssid}:")
+                    print(result.stderr)
+                    return False
+
+            except Exception as e:
+                print("Errore durante l'esecuzione del comando:")
+                print(str(e))
+                return False
+        else: 
+            if password == "Success":
+                return True
+            else:
+                return False
+                
+                
     def network_has_g1os(self):
         try:
             response = requests.get("http://g1os.local", timeout=5)
@@ -89,7 +81,7 @@ class NetworkController:
         except requests.RequestException:
             return False
 
-    def get_connection_status(self):
+    def get_connection_status(self):               
         if IS_RASPBERRY:
             try:
                 output = subprocess.check_output(
@@ -129,19 +121,15 @@ class NetworkController:
                                 except:
                                     pass
 
-                return {"connected": connected, "ssid": ssid, "strength": strength}
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.connect(("8.8.8.8", 80))
+                ip = s.getsockname()[0]
+                s.close()
+                
+                return {"connected": connected, "ssid": ssid, "strength": strength, "ip": ip}
 
             except Exception as e:
                 print(f"Errore get_connection_status: {e}")
-                return {"connected": False, "ssid": None, "strength": 0}
+                return {"connected": False, "ssid": None, "strength": 0, "ip": "--.--.--.--"}
         else:
-            # Mock per ambiente non-Raspberry
-            return {"connected": True, "ssid": "Mock_Network", "strength": 72}
-
-    def get_current_ssid(self):
-        try:
-            output = subprocess.check_output(
-                ['iwgetid', '-r'], encoding='utf-8').strip()
-            return output if output else None
-        except Exception:
-            return None
+            return {"connected": True, "ssid": "Office_Net", "strength": 72, "ip": "192.168.1.1"}
