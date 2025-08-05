@@ -142,7 +142,6 @@ export default function VirtualKeyboard() {
             '{symbols}': '#+=',
             '{abc}': 'ABC',
           }}
-          autoUseTouchEvents
         />
       </div>
     </>
