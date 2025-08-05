@@ -25,6 +25,7 @@ running = True
 def background_loop():
     global running
     while running:
+        dryer.update_fan_cooldown()
         now, max6675_temp, sht40_hum, sht40_temp = dryer.read_sensor()
         dryer.update_heater_pid_discrete(max6675_temp)
         if time.time() - dryer.log_timer >= 10:

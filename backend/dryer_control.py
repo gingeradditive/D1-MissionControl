@@ -37,6 +37,8 @@ class DryerController:
         self.history = deque(maxlen=43200)  # 12h a 1Hz
         self.log_timer = time.time()
         self.dryer_status = False
+        self.fan_cooldown_end = None
+        self.cooldown_active = False
 
         # DEMO VALUES
         self.prev_temp = random.uniform(20, 30)
@@ -72,6 +74,8 @@ class DryerController:
     def start(self):
         if not self.dryer_status:
             self.dryer_status = True
+            self.cooldown_active = False  # Interrompe il cooldown se il dryer riparte
+            self.fan_cooldown_end = None
             if IS_RASPBERRY:
                 GPIO.output(self.SSR_FAN_GPIO, GPIO.HIGH)
             self.ssr_fan = True
@@ -81,14 +85,19 @@ class DryerController:
         if self.dryer_status:
             self.dryer_status = False
             if IS_RASPBERRY:
-                GPIO.output(self.SSR_FAN_GPIO, GPIO.LOW)
-            self.ssr_fan = False
+                GPIO.output(self.SSR_HEATER_GPIO, GPIO.LOW)
+            self.ssr_heater = False
             print("Heater stopped.")
+
+            # Imposta il cooldown di 2 minuti per la ventola
+            self.fan_cooldown_end = time.time() + 120
+            self.cooldown_active = True
+            print("Fan cooldown started for 2 minutes.")
 
     def read_sensor(self):
         if IS_RASPBERRY:
             sht40_temp, sht40_hum = self.sht.measurements
-            
+
             max6675_temp = 9999
             raw = self.spi.readbytes(2)
             if not len(raw) != 2:
@@ -264,7 +273,8 @@ class DryerController:
             # Aggiungiamo dryer_status alla tupla con i nuovi dati
             (timestamp, max6675_temp, sht40_temp, sht40_hum,
              ssr_heater, ssr_fan) = self.history[-1]
-            data = (timestamp, max6675_temp, sht40_temp, sht40_hum, ssr_heater, ssr_fan, self.dryer_status)
+            data = (timestamp, max6675_temp, sht40_temp, sht40_hum,
+                    ssr_heater, ssr_fan, self.dryer_status)
         return data
 
     def aggregate_data(self, data, now, interval_seconds, window_seconds):
@@ -310,3 +320,12 @@ class DryerController:
         self.tolerance = new_temp * 0.01
         self.save_setpoint(new_temp)
         print(f"Setpoint aggiornato a {new_temp}°C")
+
+    def update_fan_cooldown(self):
+        if self.cooldown_active and not self.dryer_status:
+            if time.time() >= self.fan_cooldown_end:
+                if IS_RASPBERRY:
+                    GPIO.output(self.SSR_FAN_GPIO, GPIO.LOW)
+                self.ssr_fan = False
+                self.cooldown_active = False
+                print("Fan turned off after cooldown.")
