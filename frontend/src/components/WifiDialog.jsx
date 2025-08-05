@@ -45,11 +45,10 @@ export default function WifiListDialog({ open, onClose }) {
     }
   }, [open]);
 
-  const handleForget = async (ssid) => {
+  const handleForget = async () => {
     try {
-      await api.forgetNetwork(ssid);
-      setWifiList(prev => prev.filter(n => n.ssid !== ssid));
-      if (connectedNetwork?.ssid === ssid) setConnectedNetwork(null);
+      await api.setConnectionForget();
+      setConnectedNetwork(null);
     } catch (err) {
       console.error("Error forgetting network:", err);
     }
@@ -71,7 +70,7 @@ export default function WifiListDialog({ open, onClose }) {
               return (
                 <ListItem key={network.ssid} disablePadding secondaryAction={
                   isConnected && (
-                    <IconButton onClick={() => handleForget(network.ssid)} color="error">
+                    <IconButton onClick={() => handleForget()} color="error">
                       <DeleteIcon />
                     </IconButton>
                   )

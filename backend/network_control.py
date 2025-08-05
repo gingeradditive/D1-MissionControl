@@ -73,6 +73,57 @@ class NetworkController:
             else:
                 return False
                 
+    def forget_current_connection(self):
+        if IS_RASPBERRY:
+            try:
+                # Trova il nome della connessione attiva
+                result = subprocess.run(
+                    ['nmcli', '-t', '-f', 'NAME,DEVICE', 'connection', 'show', '--active'],
+                    capture_output=True,
+                    text=True
+                )
+
+                if result.returncode != 0:
+                    print("Errore nel recuperare la connessione attiva:")
+                    print(result.stderr)
+                    return False
+
+                # Estrai il nome della connessione
+                active_connections = result.stdout.strip().split('\n')
+                wifi_connection = None
+                for conn in active_connections:
+                    name, device = conn.split(":")
+                    if "wlan" in device:
+                        wifi_connection = name
+                        break
+
+                if not wifi_connection:
+                    print("Nessuna connessione Wi-Fi attiva trovata.")
+                    return False
+
+                # Elimina la connessione
+                del_result = subprocess.run(
+                    ['nmcli', 'connection', 'delete', wifi_connection],
+                    capture_output=True,
+                    text=True
+                )
+
+                if del_result.returncode == 0:
+                    print(f"Connessione '{wifi_connection}' dimenticata con successo.")
+                    return True
+                else:
+                    print(f"Errore durante la rimozione della connessione '{wifi_connection}':")
+                    print(del_result.stderr)
+                    return False
+
+            except Exception as e:
+                print("Errore durante la rimozione della connessione:")
+                print(str(e))
+                return False
+        else:
+            print("Simulazione: connessione dimenticata")
+            return True
+
                 
     def network_has_g1os(self):
         try:

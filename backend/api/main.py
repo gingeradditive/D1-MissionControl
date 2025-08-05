@@ -121,6 +121,15 @@ def check_g1os():
     return {"status": network.network_has_g1os()}
 
 
+@app.post("/connection/forget")
+def set_connection_forget():
+    result = network.forget_current_connection()
+    if result:
+        return {"status": "Success", "message": "Connection forgotten successfully"}
+    else:
+        return {"status": "Error", "message": "Failed to forget the connection"}
+
+
 @app.get("/check-updates")
 def check_updates():
     try:

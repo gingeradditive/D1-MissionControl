@@ -19,6 +19,7 @@ export const api = {
   setConnection: (ssid, password) => apiClient.post(`/connection/${ssid}/${password}`),
   getConnectionStatus: () => apiClient.get("/connection/status"),
   getconnectionG1OS: () => apiClient.get("/connection/g1os"),
+  setConnectionForget: () => apiClient.post(`/connection/forget`),
 
   checkForUpdates: () => apiClient.get("/check-updates"),
 };
