@@ -71,7 +71,7 @@ export default function App() {
           }}
         />
 
-        {showBackButton & !isKiosk && (
+        {showBackButton && !isKiosk && (
           <BackButton onClick={() => window.location.href = 'https://g1os.local'} />
         )}
 
