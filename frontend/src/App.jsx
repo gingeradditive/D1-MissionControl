@@ -7,6 +7,8 @@ import BackButton from './components/BackButton';
 import './App.css';
 import { api } from './api';
 import "react-simple-keyboard/build/css/index.css";
+import { KeyboardProvider } from './KeyboardContext';
+import VirtualKeyboard from './components/VirtualKeyboard';
 
 export default function App() {
   const [showBackButton, setShowBackButton] = useState(false);
@@ -21,58 +23,61 @@ export default function App() {
   }, []);
 
   return (
-    <Box
-      sx={{
-        backgroundColor: '#f5f5f5',
-        minHeight: '90vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        network: {
-          connected: false,
-          ssid: "",
-          strength: 0
-        }
-      }}
-    >
-      <Container
-        maxWidth="sm"
+    <KeyboardProvider>
+      <Box
         sx={{
-          backgroundColor: '#fff',
-          color: '#333',
-          borderRadius: 4,
-          p: 3,
-          boxShadow: 2,
-          zIndex: 1,
+          backgroundColor: '#f5f5f5',
+          minHeight: '90vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+          network: {
+            connected: false,
+            ssid: "",
+            strength: 0
+          }
         }}
       >
-        <Header />
-        <StatusManager />
-      </Container>
+        <Container
+          maxWidth="sm"
+          sx={{
+            backgroundColor: '#fff',
+            color: '#333',
+            borderRadius: 4,
+            p: 3,
+            boxShadow: 2,
+            zIndex: 1,
+          }}
+        >
+          <Header />
+          <StatusManager />
+        </Container>
 
-      <Box
-        component="img"
-        src="/Logo_ginger.svg"
-        alt="Logo Ginger"
-        sx={{
-          position: 'fixed',
-          bottom: 16,
-          right: 16,
-          width: "8vw",
-          maxWidth: 100,
-          height: 'auto',
-          opacity: 0.7,
-          zIndex: 0,
-          pointerEvents: 'none',
-        }}
-      />
+        <Box
+          component="img"
+          src="/Logo_ginger.svg"
+          alt="Logo Ginger"
+          sx={{
+            position: 'fixed',
+            bottom: 16,
+            right: 16,
+            width: "8vw",
+            maxWidth: 100,
+            height: 'auto',
+            opacity: 0.7,
+            zIndex: 0,
+            pointerEvents: 'none',
+          }}
+        />
 
-      {showBackButton & !isKiosk && (
-        <BackButton onClick={() => window.location.href = 'https://g1os.local'} />
-      )}
+        {showBackButton & !isKiosk && (
+          <BackButton onClick={() => window.location.href = 'https://g1os.local'} />
+        )}
 
-      <DateTimeDisplay />
-    </Box>
+        <DateTimeDisplay />
+      </Box>
+      <VirtualKeyboard />
+    </KeyboardProvider>
   );
 }
