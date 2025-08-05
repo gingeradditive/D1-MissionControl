@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
-    Button, Typography, Box, Select, MenuItem
+    Button, Typography, Box, Select, MenuItem, ToggleButtonGroup, ToggleButton
 } from '@mui/material';
 import AreaChartIcon from '@mui/icons-material/AreaChart';
 import {
@@ -11,8 +11,11 @@ import {
 import { api } from '../api';
 
 export default function ChartDialog({ open, onClose }) {
+    const isKiosk = new URLSearchParams(window.location.search).get("kiosk") === "true";
+
     const [range, setRange] = useState('1m');
     const [chartData, setChartData] = useState([]);
+    const [chartType, setChartType] = useState('temperature'); // 'temperature' or 'humidity'
 
     useEffect(() => {
         let interval;
@@ -51,30 +54,8 @@ export default function ChartDialog({ open, onClose }) {
         };
     }, [range, open]);
 
-    useEffect(() => {
-        if (open) {
-            api.getHistory(range)
-                .then(response => {
-                    const transformed = response.data.history.map(entry => ({
-                        time: entry.timestamp.slice(11),
-                        temperature: entry.temperature,
-                        humidity: entry.humidity,
-                        tempMin: entry.temp_min,
-                        tempMax: entry.temp_max,
-                        humMin: entry.hum_min,
-                        humMax: entry.hum_max,
-                    }));
-                    setChartData(transformed);
-                })
-                .catch(error => {
-                    console.error('Failed to fetch chart data:', error);
-                    setChartData([]);
-                });
-        }
-    }, [range, open]);
-
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="xl">
+        <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
             <DialogTitle>
                 <Box display="flex" alignItems="center">
                     <AreaChartIcon sx={{ mr: 1 }} />
@@ -82,10 +63,37 @@ export default function ChartDialog({ open, onClose }) {
                 </Box>
             </DialogTitle>
             <DialogContent dividers>
-                <Box mb={2}>
-                    <Typography variant="subtitle2">Range:</Typography>
-                    <Box display="flex" gap={1} mt={1}>
-                        <Select value={range} onChange={(e) => setRange(e.target.value)}>
+                <Box
+                    display="flex"
+                    flexDirection={{ xs: 'column', sm: 'row' }}
+                    justifyContent="space-between"
+                    alignItems={{ xs: 'flex-start', sm: 'center' }}
+                    mb={2}
+                    gap={2}
+                >
+                    <ToggleButtonGroup
+                        value={chartType}
+                        exclusive
+                        onChange={(e, value) => { if (value) setChartType(value); }}
+                        size="small"
+                        aria-label="chart type"
+                        sx={{ flexShrink: 0 }}
+                    >
+                        <ToggleButton value="temperature" aria-label="temperature chart">
+                            Temperature
+                        </ToggleButton>
+                        <ToggleButton value="humidity" aria-label="humidity chart">
+                            Humidity
+                        </ToggleButton>
+                    </ToggleButtonGroup>
+
+                    <Box>
+                        <Select
+                            value={range}
+                            onChange={(e) => setRange(e.target.value)}
+                            size="small"
+                            sx={{ minWidth: 160 }}
+                        >
                             <MenuItem value="1m">Last minute (1 value per second)</MenuItem>
                             <MenuItem value="1h">Last hour (1 value per minute)</MenuItem>
                             <MenuItem value="12h">12 hours (2 values per hour)</MenuItem>
@@ -93,11 +101,10 @@ export default function ChartDialog({ open, onClose }) {
                     </Box>
                 </Box>
 
-                <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={4}>
-                    <Box flex={1}>
-                        <Typography variant="subtitle2" mb={1}>Temperature</Typography>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <LineChart data={chartData}>
+                {chartType === 'temperature' && (
+                    <Box width="100%" height={isKiosk ? 208 : 300}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={chartData} >
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="time" />
                                 <YAxis
@@ -112,9 +119,11 @@ export default function ChartDialog({ open, onClose }) {
                             </LineChart>
                         </ResponsiveContainer>
                     </Box>
-                    <Box flex={1}>
-                        <Typography variant="subtitle2" mb={1}>Humidity</Typography>
-                        <ResponsiveContainer width="100%" height={300}>
+                )}
+
+                {chartType === 'humidity' && (
+                    <Box width="100%" height={isKiosk ? 208 : 300}>
+                        <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={chartData}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="time" />
@@ -130,7 +139,7 @@ export default function ChartDialog({ open, onClose }) {
                             </LineChart>
                         </ResponsiveContainer>
                     </Box>
-                </Box>
+                )}
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose}>Close</Button>
