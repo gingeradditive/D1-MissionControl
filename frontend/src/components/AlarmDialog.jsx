@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, Typography, Box, TextField, MenuItem,
-  FormGroup, FormControlLabel, Checkbox, List, ListItem, IconButton
+  List, ListItem, IconButton, Grid
 } from '@mui/material';
 import AccessAlarmIcon from '@mui/icons-material/AccessAlarm';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -13,6 +13,7 @@ const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Sat
 
 export default function AlarmDialog({ open, onClose }) {
   const [rules, setRules] = useState([]);
+  const [activeTab, setActiveTab] = useState('list');
 
   // Timer state
   const [timerAction, setTimerAction] = useState('on');
@@ -25,12 +26,6 @@ export default function AlarmDialog({ open, onClose }) {
   const [scheduleTemperature, setScheduleTemperature] = useState('');
   const [selectedDays, setSelectedDays] = useState([]);
 
-  const toggleDay = (day) => {
-    setSelectedDays(prev =>
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
-    );
-  };
-
   const addTimerRule = () => {
     if (timerMinutes) {
       setRules([...rules, {
@@ -39,10 +34,10 @@ export default function AlarmDialog({ open, onClose }) {
         delayMinutes: Number(timerMinutes),
         temperature: timerAction === 'on' ? Number(timerTemperature) : null
       }]);
-      // Reset
       setTimerMinutes('');
       setTimerTemperature('');
       setTimerAction('on');
+      setActiveTab("list");
     }
   };
 
@@ -56,21 +51,16 @@ export default function AlarmDialog({ open, onClose }) {
         days: selectedDays,
         lastExecuted: null
       }]);
-      // Reset
       setScheduleTime('');
       setScheduleTemperature('');
       setScheduleAction('on');
       setSelectedDays([]);
+      setActiveTab("list");
     }
   };
 
   const removeRule = (index) => {
     setRules(rules.filter((_, i) => i !== index));
-  };
-
-  const handleSave = () => {
-    console.log("Regole salvate:", rules);
-    onClose();
   };
 
   return (
@@ -83,119 +73,179 @@ export default function AlarmDialog({ open, onClose }) {
       </DialogTitle>
 
       <DialogContent dividers>
-        {/* TIMER SECTION */}
-        <Typography variant="h6" mb={1}>Add Timer</Typography>
-        <Box display="flex" gap={2} mb={2}>
-          <TextField
-            label="Action"
-            select
-            value={timerAction}
-            onChange={(e) => setTimerAction(e.target.value)}
-            fullWidth
+        {/* Toggle Tabs */}
+        <Box display="flex" justifyContent="center" mb={2}>
+          <ToggleButtonGroup
+            value={activeTab}
+            exclusive
+            onChange={(e, value) => value && setActiveTab(value)}
+            size="small"
+            aria-label="alarm tab selector"
           >
-            <MenuItem value="on">Turn ON</MenuItem>
-            <MenuItem value="off">Turn OFF</MenuItem>
-          </TextField>
-          <TextField
-            label="After (minutes)"
-            type="number"
-            value={timerMinutes}
-            onChange={(e) => setTimerMinutes(e.target.value)}
-            fullWidth
-          />
-          {timerAction === 'on' && (
-            <TextField
-              label="With Temperature (°C)"
-              type="number"
-              value={timerTemperature}
-              onChange={(e) => setTimerTemperature(e.target.value)}
-              fullWidth
-            />
-          )}
-          <Button variant="outlined" onClick={addTimerRule}><AddIcon /></Button>
+            <ToggleButton value="list">Active Rules</ToggleButton>
+            <ToggleButton value="timer">Add Timer</ToggleButton>
+            <ToggleButton value="schedule">Add Schedule</ToggleButton>
+          </ToggleButtonGroup>
         </Box>
 
-        {/* SCHEDULE SECTION */}
-        <Typography variant="h6" mt={3} mb={1}>Add Weekly Schedule</Typography>
-        <Box display="flex" gap={2} mb={2}>
-          <TextField
-            select
-            label="Action"
-            value={scheduleAction}
-            onChange={(e) => setScheduleAction(e.target.value)}
-            fullWidth
-          >
-            <MenuItem value="on">Turn ON</MenuItem>
-            <MenuItem value="off">Turn OFF</MenuItem>
-          </TextField>
-          <TextField
-            label="At (time)"
-            type="time"
-            value={scheduleTime}
-            onChange={(e) => setScheduleTime(e.target.value)}
-            fullWidth
-          />
-          {scheduleAction === 'on' && (
-            <TextField
-              label="With Temperature (°C)"
-              type="number"
-              value={scheduleTemperature}
-              onChange={(e) => setScheduleTemperature(e.target.value)}
-              fullWidth
-            />
-          )}
-          <Button variant="outlined" onClick={addScheduleRule}><AddIcon /></Button>
-        </Box>
+        {/* TIMER TAB */}
+        {activeTab === 'timer' && (
+          <>
+            <Grid container spacing={2} mb={2}>
+              <Grid item size={4}>
+                <TextField
+                  size="small"
+                  label="Action"
+                  select
+                  value={timerAction}
+                  onChange={(e) => setTimerAction(e.target.value)}
+                  fullWidth
+                >
+                  <MenuItem value="on">Turn ON</MenuItem>
+                  <MenuItem value="off">Turn OFF</MenuItem>
+                </TextField>
+              </Grid>
+              <Grid item size={4}>
+                <TextField
+                  size="small"
+                  label="After (minutes)"
+                  type="number"
+                  value={timerMinutes}
+                  onChange={(e) => setTimerMinutes(e.target.value)}
+                  fullWidth
+                />
+              </Grid>
+              {timerAction === 'on' && (
+                <Grid item size={4}>
+                  <TextField
+                    size="small"
+                    label="With Temperature (°C)"
+                    type="number"
+                    value={timerTemperature}
+                    onChange={(e) => setTimerTemperature(e.target.value)}
+                    fullWidth
+                  />
+                </Grid>
+              )}
 
-        <ToggleButtonGroup
-          value={selectedDays}
-          onChange={(event, newDays) => setSelectedDays(newDays)}
-          aria-label="days of the week"
-          fullWidth
-        >
-          {daysOfWeek.map((day) => (
-            <ToggleButton key={day} value={day}>
-              {day.slice(0, 3)} {/* mostra LUN, MAR, MER... */}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
+              <Grid item size={12}>
+                <Button variant="outlined" onClick={addTimerRule} startIcon={<AddIcon />}>
+                  Add Timer
+                </Button>
+              </Grid>
+            </Grid>
+          </>
+        )}
 
-        {/* LIST OF RULES */}
-        <Typography variant="h6" mt={4}>Active Timers & Schedules</Typography>
-        {rules.length === 0 && <Typography>No schedule set.</Typography>}
-        <List dense>
-          {rules.map((rule, index) => (
-            <ListItem
-              key={index}
-              secondaryAction={
-                <IconButton edge="end" onClick={() => removeRule(index)}>
-                  <DeleteIcon />
-                </IconButton>
-              }
-            >
-              <Typography variant="body2">
-                {rule.type === 'timer' && (
-                  <>
-                    Timer: {rule.action === 'on' ? 'Turn on' : 'Turn off'} in {rule.delayMinutes} min
-                    {rule.temperature != null ? ` at ${rule.temperature}°C` : ''}
-                  </>
-                )}
-                {rule.type === 'schedule' && (
-                  <>
-                    {rule.action === 'on' ? 'Turn on' : 'Turn off'} at {rule.time}
-                    {rule.temperature != null ? ` at ${rule.temperature}°C` : ''}
-                    {' '}({rule.days.join(', ')})
-                    <br />
-                    <Typography variant="caption" color="text.secondary">
-                      Last executed: {rule.lastExecuted ? new Date(rule.lastExecuted).toLocaleString() : 'Never'}
-                    </Typography>
-                  </>
-                )}
-              </Typography>
-            </ListItem>
-          ))}
-        </List>
+        {/* SCHEDULE TAB */}
+        {activeTab === 'schedule' && (
+          <>
+            <Grid container spacing={2} mb={2}>
+              <Grid item size={4}>
+              <TextField
+                size="small"
+                select
+                label="Action"
+                value={scheduleAction}
+                onChange={(e) => setScheduleAction(e.target.value)}
+                fullWidth
+              >
+                <MenuItem value="on">Turn ON</MenuItem>
+                <MenuItem value="off">Turn OFF</MenuItem>
+              </TextField>
+              </Grid>
+
+              <Grid item size={4}>
+              <TextField
+                size="small"
+                label="At (time)"
+                type="time"
+                value={scheduleTime}
+                onChange={(e) => setScheduleTime(e.target.value)}
+                fullWidth
+              />
+              </Grid>
+              {scheduleAction === 'on' && (
+                <Grid item size={4}>
+                <TextField
+                  size="small"
+                  label="With Temperature (°C)"
+                  type="number"
+                  value={scheduleTemperature}
+                  onChange={(e) => setScheduleTemperature(e.target.value)}
+                  fullWidth
+                />
+                </Grid>
+              )}
+              <Grid item size={12}>
+              <ToggleButtonGroup
+                value={selectedDays}
+                onChange={(event, newDays) => setSelectedDays(newDays)}
+                aria-label="days of the week"
+                fullWidth
+              >
+                {daysOfWeek.map((day) => (
+                  <ToggleButton key={day} value={day}>
+                    {day.slice(0, 3)}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+              </Grid>
+              <Grid item size={12}>
+              <Button variant="outlined" onClick={addScheduleRule} startIcon={<AddIcon />}>
+                Add Schedule
+              </Button>
+              </Grid>
+            </Grid>
+          </>
+        )}
+
+        {/* RULES LIST TAB */}
+        {activeTab === 'list' && (
+          <>
+            {rules.length === 0 ? (
+              <Typography>No schedule set.</Typography>
+            ) : (
+              <List dense>
+                {rules.map((rule, index) => (
+                  <ListItem
+                    key={index}
+                    secondaryAction={
+                      <IconButton edge="end" onClick={() => removeRule(index)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    }
+                  >
+                    <Box>
+                      <Typography variant="body2">
+                        {rule.type === 'timer' && (
+                          <>
+                            Timer: {rule.action === 'on' ? 'Turn on' : 'Turn off'} in {rule.delayMinutes} min
+                            {rule.temperature != null ? ` at ${rule.temperature}°C` : ''}
+                          </>
+                        )}
+                        {rule.type === 'schedule' && (
+                          <>
+                            {rule.action === 'on' ? 'Turn on' : 'Turn off'} at {rule.time}
+                            {rule.temperature != null ? ` at ${rule.temperature}°C` : ''}
+                            {' '}({rule.days.join(', ')})
+                          </>
+                        )}
+                      </Typography>
+                      {rule.type === 'schedule' && (
+                        <Typography variant="caption" color="text.secondary">
+                          Last executed: {rule.lastExecuted ? new Date(rule.lastExecuted).toLocaleString() : 'Never'}
+                        </Typography>
+                      )}
+                    </Box>
+                  </ListItem>
+                ))}
+              </List>
+            )}
+          </>
+        )}
       </DialogContent>
+
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
       </DialogActions>
