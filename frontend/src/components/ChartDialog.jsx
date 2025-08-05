@@ -81,7 +81,7 @@ export default function ChartDialog({ open, onClose }) {
                     Chart for Temperature & Humidity
                 </Box>
             </DialogTitle>
-            <DialogContent>
+            <DialogContent dividers>
                 <Box mb={2}>
                     <Typography variant="subtitle2">Range:</Typography>
                     <Box display="flex" gap={1} mt={1}>

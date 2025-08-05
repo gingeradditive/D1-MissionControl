@@ -48,7 +48,7 @@ export default function Header() {
             "ip": "--.--.--.--"
           });
         }
-        
+
         setNetwork(res.data);
       })
       .catch(err => console.error("Errore nel fetch /status:", err));
@@ -68,6 +68,24 @@ export default function Header() {
     if (strength > 50) return <SignalWifi3BarIcon />;
     if (strength > 25) return <SignalWifi2BarIcon />;
     return <SignalWifi1BarIcon />;
+  };
+
+  const keysToShow = [
+    "heater_pulse_duration",
+    "heater_kp",
+    "heater_ki",
+    "heater_min_pause",
+    "heater_max_pause",
+    "fan_cooldown_duration"
+  ];
+
+  const titlesMap = {
+    heater_pulse_duration: "Heater pulse duration (seconds)",
+    heater_kp: "Heater proportional gain (Kp)",
+    heater_ki: "Heater integral gain (Ki)",
+    heater_min_pause: "Heater minimum pause (seconds)",
+    heater_max_pause: "Heater maximum pause (seconds)",
+    fan_cooldown_duration: "Fan cooldown elapse (seconds)",
   };
 
   return (
@@ -104,7 +122,12 @@ export default function Header() {
         chartData={mockChartData}
       />
 
-      <SettingsDialog open={openModal === 'settings'} onClose={handleClose} />
+      <SettingsDialog
+        open={openModal === 'settings'}
+        onClose={handleClose}
+        keysToShow={keysToShow}
+        titlesMap={titlesMap}
+      />
     </>
   );
 }

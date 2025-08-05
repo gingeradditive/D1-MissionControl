@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 from collections import deque
 import sys
 
+from backend.config_control import ConfigController
+
 try:
     import board
     import adafruit_sht4x
@@ -14,22 +16,22 @@ try:
 except (ImportError, NotImplementedError):
     IS_RASPBERRY = False
 
-SETPOINT_FILE = "setpoint.txt"
-
-
 class DryerController:
 
     def __init__(self):
+        # Config values 
+        self.configController = ConfigController()
         self.last_heater_action = time.time()
-        self.heater_pulse_duration = 10  # secondi
-        self.Kp = 5.0      # quanto più l’errore è alto, tanto meno attende
-        self.Ki = 0.1      # accumulo dell’errore nel tempo
-        self.min_pause = 5   # attesa minima tra impulsi
-        self.max_pause = 60  # attesa massima tra impulsi
+        self.heater_pulse_duration = self.configController.get_config_param("heater_pulse_duration", 10)
+        self.Kp = self.configController.get_config_param("heater_kp", 5.0)
+        self.Ki = self.configController.get_config_param("heater_ki", 0.1)
+        self.min_pause = self.configController.get_config_param("heater_min_pause", 5)
+        self.max_pause = self.configController.get_config_param("heater_max_pause", 60)
+        set_temp = self.configController.get_config_param("setpoint", 70)
+        self.fan_cooldown_duration = self.configController.get_config_param("fan_cooldown_duration", 120)
 
+        # System Vars
         self.integral_error = 0.0
-        self.prev_error = 0.0
-        set_temp = self.load_setpoint()
         self.set_temp = set_temp
         self.tolerance = set_temp * 0.01
         self.ssr_heater = False
@@ -89,10 +91,9 @@ class DryerController:
             self.ssr_heater = False
             print("Heater stopped.")
 
-            # Imposta il cooldown di 2 minuti per la ventola
-            self.fan_cooldown_end = time.time() + 120
+            self.fan_cooldown_end = time.time() + self.fan_cooldown_duration
             self.cooldown_active = True
-            print("Fan cooldown started for 2 minutes.")
+            print("Fan cooldown started.")
 
     def read_sensor(self):
         if IS_RASPBERRY:
@@ -300,25 +301,10 @@ class DryerController:
 
         return result
 
-    def save_setpoint(self, value):
-        try:
-            with open(SETPOINT_FILE, "w") as f:
-                f.write(f"{value}")
-        except Exception as e:
-            print(f"Errore nel salvataggio del setpoint: {e}")
-
-    def load_setpoint(self):
-        try:
-            with open(SETPOINT_FILE, "r") as f:
-                return float(f.read().strip())
-        except (FileNotFoundError, ValueError):
-            print("Setpoint non trovato, uso valore di default 45.0°C")
-            return 45.0
-
     def update_setpoint(self, new_temp):
         self.set_temp = new_temp
         self.tolerance = new_temp * 0.01
-        self.save_setpoint(new_temp)
+        self.configController.set_config_param("setpoint", new_temp)
         print(f"Setpoint aggiornato a {new_temp}°C")
 
     def update_fan_cooldown(self):

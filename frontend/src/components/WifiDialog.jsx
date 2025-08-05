@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, List, ListItem, ListItemButton,
-  ListItemIcon, ListItemText, Typography, Button, Box,
+  ListItemIcon, ListItemText, Typography, Button, Box, DialogActions,
   IconButton
 } from '@mui/material';
 import WifiIcon from '@mui/icons-material/Wifi';
@@ -63,7 +63,7 @@ export default function WifiListDialog({ open, onClose }) {
             Available WiFi Networks
           </Box>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent dividers>
           <List>
             {wifiList.map((network) => {
               const isConnected = connectedNetwork?.ssid === network.ssid;
@@ -98,6 +98,9 @@ export default function WifiListDialog({ open, onClose }) {
             })}
           </List>
         </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose}>Close</Button>
+        </DialogActions>
       </Dialog>
 
       {/* Modal di connessione */}

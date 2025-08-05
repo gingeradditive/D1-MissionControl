@@ -14,12 +14,20 @@ export const api = {
   setStatus: (status) => apiClient.post(`/status/${status}`),
   getHistory: (mode) => apiClient.get(`/history`, { params: { mode } }),
   setPoint: (value) => apiClient.post(`/setpoint/${value}`),
-  
+
   getConnection: () => apiClient.get("/connection"),
   setConnection: (ssid, password) => apiClient.post(`/connection/${ssid}/${password}`),
   getConnectionStatus: () => apiClient.get("/connection/status"),
   getconnectionG1OS: () => apiClient.get("/connection/g1os"),
   setConnectionForget: () => apiClient.post(`/connection/forget`),
+
+  getConfiguration: () => apiClient.get("/config"),
+  setConfiguration: (key, value) => apiClient.post("/config/set",
+    new URLSearchParams({ key, value }).toString(),
+    {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    }
+  ),
 
   checkForUpdates: () => apiClient.get("/check-updates"),
 };

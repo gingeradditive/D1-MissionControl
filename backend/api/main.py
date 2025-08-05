@@ -1,8 +1,9 @@
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from backend.dryer_control import DryerController
 from backend.network_control import NetworkController
 from backend.update_control import UpdateController
+from backend.config_control import ConfigController
 from threading import Thread
 from datetime import datetime
 import time
@@ -11,6 +12,7 @@ app = FastAPI()
 dryer = DryerController()  # default value
 network = NetworkController()
 update = UpdateController(".")
+config = ConfigController()
 origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
@@ -139,9 +141,23 @@ def check_updates():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@app.get("/config")
+def get_config():
+    return config.get_all_config()
+
+
+@app.post("/config/set")
+def set_config(key: str = Form(...), value: str = Form(...)):
+    config.set_config_param(key, value)
+    return {"status": "Success", "message": "Updated configuration"}
+
+
+
 @app.on_event("shutdown")
 def on_shutdown():
     global running
     running = False
     thread.join()
     dryer.shutdown()
+
