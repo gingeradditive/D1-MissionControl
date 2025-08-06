@@ -66,3 +66,25 @@ class UpdateController:
         print("🔁 Riavvio necessario, lo eseguo ora...")
         self.reboot_device()
         return True
+
+
+    def get_current_version(self) -> dict:
+        """Ritorna info sul commit attuale."""
+        commit_hash = self.run_command("git rev-parse HEAD", cwd=self.project_path)
+        commit_msg = self.run_command("git log -1 --pretty=%B", cwd=self.project_path)
+        commit_date = self.run_command("git log -1 --date=iso --pretty=format:%cd", cwd=self.project_path)
+        
+        return {
+            "commit": commit_hash.strip()[:7],
+            "message": commit_msg.strip(),
+            "date": commit_date.strip(),
+        }
+
+
+    def is_update_available(self) -> bool:
+        """Controlla se ci sono aggiornamenti disponibili (senza applicarli)."""
+        self.mark_directory_safe()
+        self.run_command("git fetch", cwd=self.project_path)
+        local = self.run_command("git rev-parse HEAD", cwd=self.project_path)
+        remote = self.run_command("git rev-parse @{u}", cwd=self.project_path)
+        return local != remote

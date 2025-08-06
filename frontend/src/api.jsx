@@ -30,5 +30,7 @@ export const api = {
   ),
   getConfiguration: (key) => apiClient.get(`/config/${key}`),
   
-  checkForUpdates: () => apiClient.get("/check-updates"),
+  getUpdateVersion: () => apiClient.get("/update/version"),
+  getUpdateCheck: () => apiClient.get("/update/check"),
+  getUpdateApply: () => apiClient.get("/update/apply"),
 };

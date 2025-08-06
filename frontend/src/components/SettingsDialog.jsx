@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, Typography, Box, Divider, CircularProgress,
-  TextField, IconButton, Grid
+  TextField, IconButton, Grid, DialogContentText
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import UpdateIcon from '@mui/icons-material/SystemUpdateAlt';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { api } from '../api';
-import { useKeyboard } from '../KeyboardContext';  
+import { useKeyboard } from '../KeyboardContext';
 
 export default function SettingsDialog({
   open,
@@ -24,8 +24,12 @@ export default function SettingsDialog({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
+
   const [checking, setChecking] = useState(false);
   const [updateStatus, setUpdateStatus] = useState(null);
+  const [versionInfo, setVersionInfo] = useState(null);
+  const [showConfirmUpdate, setShowConfirmUpdate] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -34,14 +38,24 @@ export default function SettingsDialog({
         .then(response => {
           setConfig(response.data);
           setOriginalConfig(response.data);
-          setLoading(false);
           setSaveError(null);
-          setUpdateStatus(null);
         })
-        .catch(err => {
-          setLoading(false);
+        .catch(() => {
           setSaveError('Failed to load configuration.');
+        })
+        .finally(() => {
+          setLoading(false);
         });
+
+      api.getUpdateVersion()
+        .then(res => {
+          setVersionInfo(res.data);
+        })
+        .catch(() => {
+          setVersionInfo(null);
+        });
+
+      setUpdateStatus(null);
     }
   }, [open]);
 
@@ -63,7 +77,6 @@ export default function SettingsDialog({
     if (!config) return;
     setSaving(true);
     setSaveError(null);
-    // Filtra solo i valori modificati per ottimizzare richieste
     const keysToUpdate = Object.keys(config).filter(
       key => config[key] !== originalConfig[key]
     );
@@ -72,31 +85,50 @@ export default function SettingsDialog({
     )
       .then(() => {
         setOriginalConfig(config);
-        setSaving(false);
       })
-      .catch(err => {
+      .catch(() => {
         setSaveError('Failed to save configuration.');
-        setSaving(false);
-      });
+      })
+      .finally(() => setSaving(false));
   };
 
   const handleCheckUpdates = () => {
     setChecking(true);
     setUpdateStatus(null);
 
-    api.checkForUpdates()
+    api.getUpdateCheck()
       .then(response => {
         setChecking(false);
         if (response.data.updateAvailable) {
-          setUpdateStatus("Update in progress...");
+          setUpdateStatus("Update available!");
+          setShowConfirmUpdate(true);
         } else {
           setUpdateStatus("You have the latest version.");
         }
       })
       .catch(error => {
-        setChecking(false);
         console.error('Error checking for updates:', error);
+        setChecking(false);
         setUpdateStatus("Failed to check for updates.");
+      });
+  };
+
+  const handleApplyUpdate = () => {
+    setUpdating(true);
+    api.getUpdateApply()
+      .then(res => {
+        if (res.data.updateApplied) {
+          setUpdateStatus("Update applied. Rebooting...");
+        } else {
+          setUpdateStatus("Already up to date.");
+        }
+      })
+      .catch(() => {
+        setUpdateStatus("Failed to apply update.");
+      })
+      .finally(() => {
+        setUpdating(false);
+        setShowConfirmUpdate(false);
       });
   };
 
@@ -127,7 +159,7 @@ export default function SettingsDialog({
                     key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
                   return (
-                    <Grid item size={6} key={key}>
+                    <Grid item xs={6} key={key}>
                       <TextField
                         label={label}
                         type="number"
@@ -169,26 +201,30 @@ export default function SettingsDialog({
 
             <Divider sx={{ my: 2 }} />
 
+            {/* --- Version Info & Update --- */}
             <Box sx={{ mb: 3 }}>
-              <Box display="flex" alignItems="center" mb={1}>
-                <UpdateIcon sx={{ mr: 1 }} />
-                <Typography variant="subtitle1">Check for Updates</Typography>
-              </Box>
-
-              <Button
-                variant="outlined"
-                onClick={handleCheckUpdates}
-                disabled={checking}
-                sx={{ mb: 1 }}
-              >
-                {checking ? <CircularProgress size={20} /> : "Check Now"}
-              </Button>
-
-              {updateStatus && (
-                <Typography variant="body2" color="textSecondary">
-                  {updateStatus}
+              {versionInfo && (
+                <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+                  Version: <strong>{versionInfo.commit.slice(0, 7)}</strong><br />
+                  Date: <strong>{new Date(versionInfo.date).toLocaleString()}</strong>
                 </Typography>
               )}
+
+              <Box display="flex" alignItems="center" gap={1}>
+                <Button
+                  variant="outlined"
+                  onClick={handleCheckUpdates}
+                  disabled={checking}
+                >
+                  {checking ? <CircularProgress size={20} /> : "Check for Updates"}
+                </Button>
+
+                {updateStatus && (
+                  <Typography variant="body2" color="textSecondary">
+                    {updateStatus}
+                  </Typography>
+                )}
+              </Box>
             </Box>
           </>
         )}
@@ -196,6 +232,22 @@ export default function SettingsDialog({
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
       </DialogActions>
+
+      {/* Confirm Update Dialog */}
+      <Dialog open={showConfirmUpdate} onClose={() => setShowConfirmUpdate(false)}>
+        <DialogTitle>Confirm Update</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            An update is available. Do you want to apply it now? This may restart the device.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowConfirmUpdate(false)}>Cancel</Button>
+          <Button onClick={handleApplyUpdate} disabled={updating} variant="contained" color="primary">
+            {updating ? <CircularProgress size={20} /> : "Apply Update"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Dialog>
   );
 }

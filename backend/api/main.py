@@ -133,13 +133,31 @@ def set_connection_forget():
         return {"status": "Error", "message": "Failed to forget the connection"}
 
 
-@app.get("/check-updates")
-def check_updates():
+@app.get("/update/version")
+def get_version():
     try:
-        update_applied = update.full_update()
-        return {"updateAvailable": update_applied}
+        return update.get_current_version()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/update/check")
+def check_updates():
+    try:
+        is_available = update.is_update_available()
+        return {"updateAvailable": is_available}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("update/apply")
+def apply_update():
+    try:
+        update_applied = update.full_update()
+        return {"updateApplied": update_applied}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @app.get("/config")
