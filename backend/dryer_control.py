@@ -357,24 +357,24 @@ class DryerController:
             self.set_angle(90)
         else:
             print("Opening valve...")
-        self.valve_is_open = True
+        self.valve_is_open = False
 
     def valve_close(self):
         if IS_RASPBERRY:
             self.set_angle(0)
         else:
             print("Closing valve...")
-        self.valve_is_open = False
+        self.valve_is_open = True
 
     def update_valve(self):
         if(self.dryer_status):
             now = time.time()
 
             if self.valve_is_open:
-                if now - self.valve_last_switch_time >= self.valve_open_interval:
-                    self.valve_close()
-                    self.valve_last_switch_time = now
-            else:
                 if now - self.valve_last_switch_time >= self.valve_close_interval:
                     self.valve_open()
+                    self.valve_last_switch_time = now
+            else:
+                if now - self.valve_last_switch_time >= self.valve_open_interval:
+                    self.valve_close()
                     self.valve_last_switch_time = now
