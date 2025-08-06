@@ -344,10 +344,17 @@ class DryerController:
                 self.cooldown_active = False
                 print("Fan turned off after cooldown.")
 
+                
     def set_angle(self, angle):
-        duty = (angle / 270.0) * 10 + 2.5
-        GPIO.output(self.SERVO_PIN, True)
+        if angle == 0:
+            duty = 2.5  # 0° su servo 270°
+        elif angle == 90:
+            duty = 7.5  # 90° su servo 270°
+        else:
+            duty = (angle / 270.0) * 10 + 2.5
+
         self.pwm.ChangeDutyCycle(duty)
+
 
     def valve_open(self):
         if IS_RASPBERRY:
