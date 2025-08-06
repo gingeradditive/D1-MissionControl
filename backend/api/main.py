@@ -153,7 +153,7 @@ def check_updates():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("update/apply")
+@app.post("/update/apply")
 def apply_update():
     try:
         update_applied = update.full_update()
