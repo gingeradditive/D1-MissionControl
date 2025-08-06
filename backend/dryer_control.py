@@ -348,9 +348,6 @@ class DryerController:
         duty = (angle / 270.0) * 10 + 2.5
         GPIO.output(self.SERVO_PIN, True)
         self.pwm.ChangeDutyCycle(duty)
-        time.sleep(0.5)
-        GPIO.output(self.SERVO_PIN, False)
-        self.pwm.ChangeDutyCycle(0)
 
     def valve_open(self):
         if IS_RASPBERRY:
