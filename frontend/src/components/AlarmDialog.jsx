@@ -74,7 +74,7 @@ export default function AlarmDialog({ open, onClose }) {
 
       <DialogContent dividers>
         {/* Toggle Tabs */}
-        <Box display="flex" justifyContent="center" mb={2}>
+        <Box display="flex" justifyContent="start" mb={2}>
           <ToggleButtonGroup
             value={activeTab}
             exclusive
