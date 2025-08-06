@@ -30,7 +30,7 @@ export default function SettingsDialog({
   useEffect(() => {
     if (open) {
       setLoading(true);
-      api.getConfiguration()
+      api.getConfigurations()
         .then(response => {
           setConfig(response.data);
           setOriginalConfig(response.data);

@@ -36,7 +36,7 @@ const ScreensaverOverlay = ({ onExit, temperature }) => {
       }}
     >
       <Typography variant="h2" sx={{ mb: 4, opacity: 1, background: "#000", padding: 1, borderRadius:"8px" }}>
-        {temperature}
+        {temperature} °C
       </Typography>
       <Typography variant="h6" sx={{ opacity: 1, background: "#000", padding: 1, borderRadius:"8px" }}>
         <TouchAppIcon/> Touch to exit screensaver

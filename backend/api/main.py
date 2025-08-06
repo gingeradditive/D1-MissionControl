@@ -153,6 +153,10 @@ def set_config(key: str = Form(...), value: str = Form(...)):
     return {"status": "Success", "message": "Updated configuration"}
 
 
+@app.get("/config/{key}")
+def get_config_by_key(key: str):
+    return config.get_config_param(key, None)
+
 
 @app.on_event("shutdown")
 def on_shutdown():
@@ -160,4 +164,3 @@ def on_shutdown():
     running = False
     thread.join()
     dryer.shutdown()
-

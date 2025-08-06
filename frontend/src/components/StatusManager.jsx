@@ -1,12 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Box } from '@mui/material';
 import TemperatureDisplay from './TemperatureDisplay';
 import Controls from './Controls';
 import Footer from './Footer';
 import CheckLight from './CheckLight';
 import { api } from '../api';
+import ScreensaverOverlay from './ScreensaverOverlay';
 
 export default function StatusManager() {
+  const isKiosk = new URLSearchParams(window.location.search).get("kiosk") === "true";
+
+  const [isScreensaverActive, setIsScreensaverActive] = useState(false);
+  const [inactivityTimeout, setInactivityTimeout] = useState(null);
+  const lastInteractionTime = useRef(Date.now()); // usare ref per evitare dipendenze extra
+
   const [status, setStatus] = useState({
     current_temp: null,
     setpoint: null,
@@ -16,6 +23,21 @@ export default function StatusManager() {
     status: false,
   });
 
+  // Fetch configurazione timeout
+  useEffect(() => {
+    const fetchTimeout = async () => {
+      try {
+        const response = await api.getConfiguration("inactivity_timeout");
+        setInactivityTimeout(response.data); // Assicurati che sia il valore in secondi
+      } catch (error) {
+        console.error("Errore durante il fetch:", error);
+      }
+    };
+
+    fetchTimeout();
+  }, []);
+
+  // Fetch status regolarmente
   useEffect(() => {
     const interval = setInterval(() => {
       api.getStatus()
@@ -25,6 +47,33 @@ export default function StatusManager() {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Event handler per interazione utente
+  const resetTimer = () => {
+    lastInteractionTime.current = Date.now();
+    if (isScreensaverActive) {
+      setIsScreensaverActive(false);
+    }
+  };
+
+  // Gestione inattività
+  useEffect(() => {
+    if (!isKiosk || inactivityTimeout == null || inactivityTimeout == "" || inactivityTimeout <= 0) return;
+
+    const events = ['mousemove', 'mousedown', 'touchstart', 'keydown'];
+    events.forEach(e => window.addEventListener(e, resetTimer));
+
+    const interval = setInterval(() => {
+      if (Date.now() - lastInteractionTime.current > inactivityTimeout * 1000) {
+        setIsScreensaverActive(true);
+      }
+    }, 1000);
+
+    return () => {
+      events.forEach(e => window.removeEventListener(e, resetTimer));
+      clearInterval(interval);
+    };
+  }, [inactivityTimeout, isKiosk]);
 
   const handleIncrease = () => {
     let newSet = Math.min(status.setpoint + 5, 100);
@@ -44,14 +93,11 @@ export default function StatusManager() {
 
   const handleStatusChange = () => {
     api.setStatus(!status.status)
-      .then(res => {
-        setStatus(prevStatus => ({
-          ...prevStatus,
-          status: !prevStatus.status,
-        }));
+      .then(() => {
+        setStatus(prev => ({ ...prev, status: !prev.status }));
       })
       .catch(err => console.error("Errore nel cambio stato:", err));
-  }
+  };
 
   return (
     <>
@@ -69,16 +115,26 @@ export default function StatusManager() {
         <CheckLight
           heaterOn={status.heater}
           fanOn={status.fan}
-          timerSet={false} // TODO
+          timerSet={false} // TODO: implement timerSet logic
         />
       </Box>
 
       <Footer
         ext_hum="---"
         int_hum={status.current_humidity}
-        status= {status.status}
+        status={status.status}
         onStatusChange={handleStatusChange}
       />
+
+      {isKiosk && isScreensaverActive && (
+        <ScreensaverOverlay
+          temperature={status.current_temp}
+          onExit={() => {
+            setIsScreensaverActive(false);
+            lastInteractionTime.current = Date.now();
+          }}
+        />
+      )}
     </>
   );
 }

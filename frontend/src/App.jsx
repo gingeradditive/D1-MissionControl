@@ -9,15 +9,10 @@ import { api } from './api';
 import "react-simple-keyboard/build/css/index.css";
 import { KeyboardProvider } from './KeyboardContext';
 import VirtualKeyboard from './components/VirtualKeyboard';
-import ScreensaverOverlay from './components/ScreensaverOverlay';
 
 export default function App() {
   const [showBackButton, setShowBackButton] = useState(false);
   const isKiosk = new URLSearchParams(window.location.search).get("kiosk") === "true";
-  const [isScreensaverActive, setIsScreensaverActive] = useState(false);
-  const [lastInteractionTime, setLastInteractionTime] = useState(Date.now());
-  const [temperature, setTemperature] = useState("--°C"); // TODO: Aggiornare valore
-  const inactivityTimeout = 5 * 1000; //TODO: recuperare dai config 
 
   useEffect(() => {
     const checkG1OS = async () => {
@@ -26,30 +21,6 @@ export default function App() {
     };
     checkG1OS();
   }, []);
-
-  useEffect(() => {
-    const resetTimer = () => {
-      setLastInteractionTime(Date.now());
-      if (isScreensaverActive) {
-        setIsScreensaverActive(false);
-      }
-    };
-
-    const events = ['mousemove', 'mousedown', 'touchstart', 'keydown'];
-    events.forEach(e => window.addEventListener(e, resetTimer));
-
-    const interval = setInterval(() => {
-      if (Date.now() - lastInteractionTime > inactivityTimeout) {
-        setIsScreensaverActive(true);
-      }
-    }, 1000);
-
-    return () => {
-      events.forEach(e => window.removeEventListener(e, resetTimer));
-      clearInterval(interval);
-    };
-  }, [lastInteractionTime, isScreensaverActive]);
-
 
   return (
     <KeyboardProvider>
@@ -107,15 +78,6 @@ export default function App() {
         <DateTimeDisplay />
       </Box>
       <VirtualKeyboard />
-      {isScreensaverActive && (
-        <ScreensaverOverlay
-          temperature={temperature}
-          onExit={() => {
-            setIsScreensaverActive(false);
-            setLastInteractionTime(Date.now());
-          }}
-        />
-      )}
     </KeyboardProvider>
   );
 }

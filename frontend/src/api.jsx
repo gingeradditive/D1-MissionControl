@@ -21,13 +21,14 @@ export const api = {
   getconnectionG1OS: () => apiClient.get("/connection/g1os"),
   setConnectionForget: () => apiClient.post(`/connection/forget`),
 
-  getConfiguration: () => apiClient.get("/config"),
+  getConfigurations: () => apiClient.get("/config"),
   setConfiguration: (key, value) => apiClient.post("/config/set",
     new URLSearchParams({ key, value }).toString(),
     {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     }
   ),
-
+  getConfiguration: (key) => apiClient.get(`/config/${key}`),
+  
   checkForUpdates: () => apiClient.get("/check-updates"),
 };

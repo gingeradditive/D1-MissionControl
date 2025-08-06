@@ -76,7 +76,8 @@ export default function Header() {
     "heater_ki",
     "heater_min_pause",
     "heater_max_pause",
-    "fan_cooldown_duration"
+    "fan_cooldown_duration",
+    "inactivity_timeout"
   ];
 
   const titlesMap = {
@@ -86,6 +87,7 @@ export default function Header() {
     heater_min_pause: "Heater minimum pause (seconds)",
     heater_max_pause: "Heater maximum pause (seconds)",
     fan_cooldown_duration: "Fan cooldown elapse (seconds)",
+    inactivity_timeout: "Screensaver timeout (seconds)"
   };
 
   return (
