@@ -345,7 +345,7 @@ class DryerController:
                 print("Fan turned off after cooldown.")
 
     def set_angle(self, angle):
-        duty = 2 + (angle / 18)
+        duty = (angle / 270.0) * 10 + 2.5
         GPIO.output(self.SERVO_PIN, True)
         self.pwm.ChangeDutyCycle(duty)
         time.sleep(0.5)
