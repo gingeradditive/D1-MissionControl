@@ -28,6 +28,7 @@ def background_loop():
     global running
     while running:
         dryer.update_fan_cooldown()
+        dryer.update_valve()
         now, max6675_temp, sht40_hum, sht40_temp = dryer.read_sensor()
         dryer.update_heater_pid_discrete(max6675_temp)
         if time.time() - dryer.log_timer >= 10:
@@ -44,7 +45,7 @@ thread.start()
 @app.get("/status")
 def get_status():
     latest = dryer.get_status_data()
-    timestamp, max6675_temp, sht40_temp, sht40_hum, ssr_heater, ssr_fan, status = latest
+    timestamp, max6675_temp, sht40_temp, sht40_hum, ssr_heater, ssr_fan, status, valve = latest
 
     return {
         "setpoint": dryer.set_temp,
@@ -53,6 +54,7 @@ def get_status():
         "heater": ssr_heater,
         "fan": ssr_fan,
         "status": status,
+        "valve": valve,
     }
 
 
@@ -86,7 +88,8 @@ def get_status(mode: str = Query(default="1h", enum=["1m", "1h", "12h"])):
                 "temp_max": round(max6675_temp_max, 2),
                 "hum_min": round(sht40_hum_min, 2),
                 "hum_max": round(sht40_hum_max, 2),
-            } for timestamp, max6675_temp, sht40_hum, heater_ratio, fan_ratio, max6675_temp_min, max6675_temp_max, sht40_hum_min, sht40_hum_max in history
+                "valve": round(valve, 2),
+            } for timestamp, max6675_temp, sht40_hum, heater_ratio, fan_ratio, max6675_temp_min, max6675_temp_max, sht40_hum_min, sht40_hum_max, valve in history
         ]
     }
 

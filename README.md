@@ -40,12 +40,12 @@ https://learn.microsoft.com/it-it/dotnet/iot/media/gpio-pinout-diagram.png
 
 |                     |                      |                        |                     |
 |--------------------:|---------------------:|------------------------|---------------------|
-| MAX6675 (3V3)       | **+3V3**             | **+5V**                | SHT4X (+5V)         |
-| SHT4X (SDA)         | **GPIO 2 (SDA)**     | **+5V**                | DEVKIT (+5V)        |
-| SHT4X (SCL)         | **GPIO 3 (SCL)**     | **GND**                | DEVKIT (GND)        |
+| MAX6675 (3V3)       | **+3V3**             | **+5V**                | VALVE (+5V)         |
+| SHT4X (SDA)         | **GPIO 2 (SDA)**     | **+5V**                | SHT4X (+3V3/+5V)    |
+| SHT4X (SCL)         | **GPIO 3 (SCL)**     | **GND**                | SHT4X (GND)         |
 |                     | **GPIO 4 (GPCLK0)**  | **GPIO 14 (TXD**)      |                     |
 | MAX6675 (GND)       | **GND**              | **GPIO 15 (RXD**)      |                     |
-|                     | **GPIO 17**          | **GPIO 18 (PCM_CLK**)  |                     |
+| VALVE (SIGNAL)      | **GPIO 17**          | **GPIO 18 (PCM_CLK**)  |                     |
 |                     | **GPIO 27**          | **GND**                | SSR_HEATER (GND)    |
 |                     | **GPIO 22**          | **GPIO 23**            | SSR_HEATER (SIGNAL) |
 |                     | **+3V3**             | **GPIO 24**            | SSR_FAN (SIGNAL)    |
@@ -54,9 +54,9 @@ https://learn.microsoft.com/it-it/dotnet/iot/media/gpio-pinout-diagram.png
 | MAX6675 (SCK)       | **GPIO 11 (SCLK)**   | **GPIO 8 (CE0**)       | MAX6675 (CS)        |
 |                     | **GND**              | **GPIO 7 (CE1**)       |                     |
 |                     | **GPIO 0 (ID_SD)**   | **GPIO 1 (ID_SC**)     |                     |
-|                     | **GPIO 5**           | **GND**                |                     |
+|                     | **GPIO 5**           | **GND**                | VALVE (GND)         |
 |                     | **GPIO 6**           | **GPIO 12 (PWM0**)     |                     |
 |                     | **GPIO 13 (PWM1)**   | **GND**                |                     |
 |                     | **GPIO 19 (PCM_FS)** | **GPIO 16**            |                     |
 |                     | **GPIO 26**          | **GPIO 20 (PCM_DIN**)  |                     |
-| SHT4X (GND)         | **GND**              | **GPIO 21 (PCM_DOUT**) |                     |
+|                     | **GND**              | **GPIO 21 (PCM_DOUT**) |                     |

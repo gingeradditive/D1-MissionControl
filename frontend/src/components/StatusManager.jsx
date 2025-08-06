@@ -21,6 +21,7 @@ export default function StatusManager() {
     heater: false,
     fan: false,
     status: false,
+    valve: false
   });
 
   // Fetch configurazione timeout
@@ -116,6 +117,7 @@ export default function StatusManager() {
           heaterOn={status.heater}
           fanOn={status.fan}
           timerSet={false} // TODO: implement timerSet logic
+          valveOpen={status.valve}
         />
       </Box>
 

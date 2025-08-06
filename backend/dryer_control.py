@@ -16,19 +16,30 @@ try:
 except (ImportError, NotImplementedError):
     IS_RASPBERRY = False
 
+
 class DryerController:
 
     def __init__(self):
-        # Config values 
+        # Config values
         self.configController = ConfigController()
         self.last_heater_action = time.time()
-        self.heater_pulse_duration = self.configController.get_config_param("heater_pulse_duration", 10, int)
-        self.Kp = self.configController.get_config_param("heater_kp", 5.0, float)
-        self.Ki = self.configController.get_config_param("heater_ki", 0.1, float)
-        self.min_pause = self.configController.get_config_param("heater_min_pause", 5, int)
-        self.max_pause = self.configController.get_config_param("heater_max_pause", 60, int)
+        self.heater_pulse_duration = self.configController.get_config_param(
+            "heater_pulse_duration", 10, int)
+        self.Kp = self.configController.get_config_param(
+            "heater_kp", 5.0, float)
+        self.Ki = self.configController.get_config_param(
+            "heater_ki", 0.1, float)
+        self.min_pause = self.configController.get_config_param(
+            "heater_min_pause", 5, int)
+        self.max_pause = self.configController.get_config_param(
+            "heater_max_pause", 60, int)
         set_temp = self.configController.get_config_param("setpoint", 70, int)
-        self.fan_cooldown_duration = self.configController.get_config_param("fan_cooldown_duration", 120, int)
+        self.fan_cooldown_duration = self.configController.get_config_param(
+            "fan_cooldown_duration", 120, int)
+        self.valve_open_interval = self.configController.get_config_param(
+            "valve_open_interval", 900, int)
+        self.valve_close_interval = self.configController.get_config_param(
+            "valve_close_interval", 300, int)
 
         # System Vars
         self.integral_error = 0.0
@@ -41,6 +52,8 @@ class DryerController:
         self.dryer_status = False
         self.fan_cooldown_end = None
         self.cooldown_active = False
+        self.valve_is_open = False
+        self.valve_last_switch_time = time.time()
 
         # DEMO VALUES
         self.prev_temp = random.uniform(20, 30)
@@ -49,13 +62,15 @@ class DryerController:
         self.log_file = f"logs/temperature_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         with open(self.log_file, "w") as f:
             f.write(
-                "timestamp;max6675_temp;sht40_temp;sht40_hum;ssr_heater;ssr_fan;setpoint\n")
+                "timestamp;max6675_temp;sht40_temp;sht40_hum;ssr_heater;ssr_fan;setpoint;valve\n")
 
         if IS_RASPBERRY:
             self.SSR_HEATER_GPIO = 23
             self.SSR_FAN_GPIO = 24
             self.MAX6675BUS = 0
             self.MAX6675DEVICE = 0
+            self.SERVO_PIN = 17
+
             GPIO.setmode(GPIO.BCM)
 
             GPIO.setup(self.SSR_HEATER_GPIO, GPIO.OUT)
@@ -63,6 +78,11 @@ class DryerController:
 
             GPIO.output(self.SSR_HEATER_GPIO, GPIO.LOW)
             GPIO.output(self.SSR_FAN_GPIO, GPIO.LOW)
+
+            GPIO.setup(self.SERVO_PIN, GPIO.OUT)
+
+            self.pwm = GPIO.PWM(self.SERVO_PIN, 50)
+            self.pwm.start(0)
 
             self.spi = spidev.SpiDev()
             self.spi.open(self.MAX6675BUS, self.MAX6675DEVICE)
@@ -81,6 +101,7 @@ class DryerController:
             if IS_RASPBERRY:
                 GPIO.output(self.SSR_FAN_GPIO, GPIO.HIGH)
             self.ssr_fan = True
+            self.valve_last_switch_time = time.time()
             print("Heater started.")
 
     def stop(self):
@@ -93,6 +114,7 @@ class DryerController:
 
             self.fan_cooldown_end = time.time() + self.fan_cooldown_duration
             self.cooldown_active = True
+            self.valve_is_open = False
             print("Fan cooldown started.")
 
     def read_sensor(self):
@@ -121,7 +143,7 @@ class DryerController:
 
         now = datetime.now()
         self.history.append(
-            (now, max6675_temp, sht40_temp, sht40_hum, self.ssr_heater, self.ssr_fan))
+            (now, max6675_temp, sht40_temp, sht40_hum, self.ssr_heater, self.ssr_fan, self.valve_is_open))
 
         return now, max6675_temp, sht40_hum, sht40_temp
 
@@ -164,7 +186,7 @@ class DryerController:
     def log(self, timestamp, max6675_temp, sht40_hum, sht40_temp):
         with open(self.log_file, "a") as f:
             f.write(
-                f"{timestamp};{max6675_temp:.2f};{sht40_temp:.2f};{sht40_hum:.2f};{self.ssr_heater};{self.ssr_fan};{self.set_temp:.2f}\n")
+                f"{timestamp};{max6675_temp:.2f};{sht40_temp:.2f};{sht40_hum:.2f};{self.ssr_heater};{self.ssr_fan};{self.set_temp:.2f};{self.valve_is_open}\n")
 
     def shutdown(self):
         if IS_RASPBERRY:
@@ -182,11 +204,11 @@ class DryerController:
             filtered = [x for x in data if (now - x[0]).total_seconds() <= 60]
             # Qui i valori sono singoli, ma possiamo fare anche min/max identici a temp stesso
             results = []
-            for timestamp, max6675_temp, sht40_temp, sht40_hum, ssr_heater, ssr_fan in filtered:
+            for timestamp, max6675_temp, sht40_temp, sht40_hum, ssr_heater, ssr_fan, valve in filtered:
                 heater_ratio = 1.0 if ssr_heater else 0.0
                 fan_ratio = 1.0 if ssr_fan else 0.0
                 results.append((timestamp, max6675_temp, sht40_hum, heater_ratio,
-                               fan_ratio, max6675_temp, max6675_temp, sht40_hum, sht40_hum))
+                               fan_ratio, max6675_temp, max6675_temp, sht40_hum, sht40_hum, valve))
             return results
 
         elif mode == '1h':
@@ -208,11 +230,13 @@ class DryerController:
                 fans = [1 if x[5] else 0 for x in window_data]
                 timestamp = window_start + \
                     timedelta(seconds=30)  # metà intervallo
+                valve = [1 if x[10] else 0 for x in window_data]
 
                 temp_avg = sum(temps) / len(temps)
                 hum_avg = sum(hums) / len(hums)
                 heater_ratio = sum(heaters) / len(heaters)
                 fan_ratio = sum(fans) / len(fans)
+                valve_ration = sum(valve) / len(valve)
                 results.append((
                     timestamp,
                     temp_avg,
@@ -222,7 +246,8 @@ class DryerController:
                     min(temps),
                     max(temps),
                     min(hums),
-                    max(hums)
+                    max(hums),
+                    valve_ration
                 ))
             return results
 
@@ -245,11 +270,13 @@ class DryerController:
                 fans = [1 if x[5] else 0 for x in window_data]
                 timestamp = window_start + \
                     timedelta(minutes=15)  # metà intervallo
+                valve = [1 if x[10] else 0 for x in window_data]
 
                 temp_avg = sum(temps) / len(temps)
                 hum_avg = sum(hums) / len(hums)
                 heater_ratio = sum(heaters) / len(heaters)
                 fan_ratio = sum(fans) / len(fans)
+                valve_ration = sum(valve) / len(valve)
 
                 results.append((
                     timestamp,
@@ -260,7 +287,8 @@ class DryerController:
                     min(temps),
                     max(temps),
                     min(hums),
-                    max(hums)
+                    max(hums),
+                    valve_ration
                 ))
             return results
 
@@ -269,13 +297,13 @@ class DryerController:
 
     def get_status_data(self):
         if not self.history:
-            data = datetime.now(), 0.0, 0.0, 0.0, 0.0, 0.0, False
+            data = datetime.now(), 0.0, 0.0, 0.0, 0.0, 0.0, False, False
         else:
             # Aggiungiamo dryer_status alla tupla con i nuovi dati
             (timestamp, max6675_temp, sht40_temp, sht40_hum,
-             ssr_heater, ssr_fan) = self.history[-1]
+             ssr_heater, ssr_fan, valve) = self.history[-1]
             data = (timestamp, max6675_temp, sht40_temp, sht40_hum,
-                    ssr_heater, ssr_fan, self.dryer_status)
+                    ssr_heater, ssr_fan, self.dryer_status, valve)
         return data
 
     def aggregate_data(self, data, now, interval_seconds, window_seconds):
@@ -315,3 +343,38 @@ class DryerController:
                 self.ssr_fan = False
                 self.cooldown_active = False
                 print("Fan turned off after cooldown.")
+
+    def set_angle(self, angle):
+        duty = 2 + (angle / 18)
+        GPIO.output(self.SERVO_PIN, True)
+        self.pwm.ChangeDutyCycle(duty)
+        time.sleep(0.5)
+        GPIO.output(self.SERVO_PIN, False)
+        self.pwm.ChangeDutyCycle(0)
+
+    def valve_open(self):
+        if IS_RASPBERRY:
+            self.set_angle(90)
+        else:
+            print("Opening valve...")
+        self.valve_is_open = True
+
+    def valve_close(self):
+        if IS_RASPBERRY:
+            self.set_angle(0)
+        else:
+            print("Closing valve...")
+        self.valve_is_open = False
+
+    def update_valve(self):
+        if(self.dryer_status):
+            now = time.time()
+
+            if self.valve_is_open:
+                if now - self.valve_last_switch_time >= self.valve_open_interval:
+                    self.valve_close()
+                    self.valve_last_switch_time = now
+            else:
+                if now - self.valve_last_switch_time >= self.valve_close_interval:
+                    self.valve_open()
+                    self.valve_last_switch_time = now

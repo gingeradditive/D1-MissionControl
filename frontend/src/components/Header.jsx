@@ -77,7 +77,9 @@ export default function Header() {
     "heater_min_pause",
     "heater_max_pause",
     "fan_cooldown_duration",
-    "inactivity_timeout"
+    "inactivity_timeout",
+    "valve_open_interval",
+    "valve_close_interval",
   ];
 
   const titlesMap = {
@@ -87,7 +89,9 @@ export default function Header() {
     heater_min_pause: "Heater minimum pause (seconds)",
     heater_max_pause: "Heater maximum pause (seconds)",
     fan_cooldown_duration: "Fan cooldown elapse (seconds)",
-    inactivity_timeout: "Screensaver timeout (seconds)"
+    inactivity_timeout: "Screensaver timeout (seconds)",
+    valve_open_interval: "Valve opened interval (seconds)",
+    valve_close_interval: "Valve closed interval (seconds)",
   };
 
   return (
