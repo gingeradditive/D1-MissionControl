@@ -22,13 +22,13 @@ class DryerController:
         # Config values 
         self.configController = ConfigController()
         self.last_heater_action = time.time()
-        self.heater_pulse_duration = self.configController.get_config_param("heater_pulse_duration", 10)
-        self.Kp = self.configController.get_config_param("heater_kp", 5.0)
-        self.Ki = self.configController.get_config_param("heater_ki", 0.1)
-        self.min_pause = self.configController.get_config_param("heater_min_pause", 5)
-        self.max_pause = self.configController.get_config_param("heater_max_pause", 60)
-        set_temp = self.configController.get_config_param("setpoint", 70)
-        self.fan_cooldown_duration = self.configController.get_config_param("fan_cooldown_duration", 120)
+        self.heater_pulse_duration = self.configController.get_config_param("heater_pulse_duration", 10, int)
+        self.Kp = self.configController.get_config_param("heater_kp", 5.0, float)
+        self.Ki = self.configController.get_config_param("heater_ki", 0.1, float)
+        self.min_pause = self.configController.get_config_param("heater_min_pause", 5, int)
+        self.max_pause = self.configController.get_config_param("heater_max_pause", 60, int)
+        set_temp = self.configController.get_config_param("setpoint", 70, int)
+        self.fan_cooldown_duration = self.configController.get_config_param("fan_cooldown_duration", 120, int)
 
         # System Vars
         self.integral_error = 0.0

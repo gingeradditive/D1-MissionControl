@@ -1,13 +1,15 @@
 import json
 import os
+from typing import TypeVar, Type, Any
 
 CONFIG_FILE = "config.json"
 
+T = TypeVar("T")
+
 class ConfigController:
-    def get_config_param(self, key, default):
+    def get_config_param(self, key: str, default: T, cast_type: Type[T] = str) -> T:
         config = {}
-        
-        # Crea file se non esiste
+
         if os.path.exists(CONFIG_FILE):
             try:
                 with open(CONFIG_FILE, "r") as f:
@@ -17,7 +19,7 @@ class ConfigController:
         else:
             print("File di configurazione non trovato, verrà creato.")
 
-        # Aggiunge chiave mancante con valore di default
+        # Aggiunge chiave mancante
         if key not in config:
             print(f"Chiave '{key}' mancante, verrà aggiunta con default: {default}")
             config[key] = default
@@ -27,8 +29,16 @@ class ConfigController:
             except Exception as e:
                 print(f"Errore nel salvataggio del file di configurazione: {e}")
 
-        return config[key]
+        value = config[key]
+
+        # Prova a convertire il valore nel tipo richiesto
+        try:
+            return cast_type(value)
+        except (ValueError, TypeError) as e:
+            print(f"Impossibile convertire '{value}' in {cast_type.__name__}, ritorno default: {default}")
+            return default
         
+
     def set_config_param(self, key, value):
         config = {}
         try:
@@ -44,6 +54,7 @@ class ConfigController:
                 json.dump(config, f, indent=4)
         except Exception as e:
             print(f"Errore nel salvataggio della configurazione: {e}")
+
 
     def get_all_config(self):
         config = {}
