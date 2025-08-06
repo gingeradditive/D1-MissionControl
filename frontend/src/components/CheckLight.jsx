@@ -36,10 +36,10 @@ export default function CheckLight({ heaterOn, fanOn, timerSet, valveOpen }) {
       </Tooltip>
 
       {/* Valve Icon */}
-      <Tooltip title={valveOpen ? "Valve Open" : "Valve Closed"}>
+      <Tooltip title={!valveOpen ? "Valve Open" : "Valve Closed"}>
         <CloudSyncIcon
           fontSize="medium"
-          sx={{ color: valveOpen ? '#0277BD' : '#cccccc'}}
+          sx={{ color: !valveOpen ? '#0277BD' : '#cccccc'}}
         />
       </Tooltip>
     </Box>
