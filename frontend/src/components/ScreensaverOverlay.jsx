@@ -33,6 +33,7 @@ const ScreensaverOverlay = ({ onExit, temperature }) => {
         justifyContent: 'center',
         color: '#333333',
         textAlign: 'center',
+        zIndex: 9999
       }}
     >
       <Typography variant="h2" sx={{ mb: 4, opacity: 1, background: "#000", padding: 1, borderRadius:"8px" }}>
