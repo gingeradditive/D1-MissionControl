@@ -62,7 +62,7 @@ export default function Footer({ ext_hum, int_hum, status, onStatusChange }) {
         <Typography variant="h6" sx={{ color: "#cccccc", padding: "0px 10px" }}>/</Typography> */}
         <WaterDropIcon fontSize="small" />
         <Typography variant="h6" sx={{ ml: 0.5 }}>{int_hum !== null ? `${int_hum}` : "-"}</Typography>
-        <Typography variant="caption" sx={{ fontSize: '0.9em', ml: 0.2 }}>g/m³</Typography>
+        <Typography variant="caption" sx={{ fontSize: '0.9em', ml: 0.2 }}>mg/m³</Typography>
       </Box>
       <Box position="relative" display="flex" justifyContent="end" alignItems="center">
         <StyledSwitch checked={checked} onChange={handleChange} />

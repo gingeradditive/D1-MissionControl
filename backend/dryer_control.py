@@ -121,7 +121,7 @@ class DryerController:
     def compute_absolute_humidity(self, temp_c, rh_percent):
         # temp_c: temperatura in gradi Celsius
         # rh_percent: umidità relativa in %
-        # ritorna: umidità assoluta in grammi per metro cubo (g/m³)
+        # ritorna: umidità assoluta in grammi per metro cubo (mg/m³)
 
         # Calcolo pressione di vapore saturo (hPa)
         p_sat = 6.112 * math.exp((17.67 * temp_c) / (temp_c + 243.5))
@@ -130,7 +130,7 @@ class DryerController:
         p_vapor = p_sat * (rh_percent / 100.0)
 
         # Umidità assoluta (g/m³)
-        ah = (2.1674 * p_vapor) / (273.15 + temp_c)
+        ah = (2.1674 * p_vapor) / (273.15 + temp_c) * 1000
 
         return ah
 
