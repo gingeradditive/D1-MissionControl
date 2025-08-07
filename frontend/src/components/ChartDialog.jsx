@@ -128,8 +128,7 @@ export default function ChartDialog({ open, onClose }) {
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="time" />
                                 <YAxis
-                                    domain={[0, 100]}
-                                    tickFormatter={(value) => `${value}%`}
+                                    width={100} tickFormatter={(value) => `${value}mg/m³`}
                                 />
                                 <Tooltip />
                                 <Legend />

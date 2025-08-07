@@ -248,7 +248,7 @@ class DryerController:
                 fans = [1 if x[5] else 0 for x in window_data]
                 timestamp = window_start + \
                     timedelta(seconds=30)  # metà intervallo
-                valve = [1 if x[10] else 0 for x in window_data]
+                valve = [1 if x[6] else 0 for x in window_data]
 
                 temp_avg = sum(temps) / len(temps)
                 hum_avg = sum(hums) / len(hums)
@@ -288,7 +288,7 @@ class DryerController:
                 fans = [1 if x[5] else 0 for x in window_data]
                 timestamp = window_start + \
                     timedelta(minutes=15)  # metà intervallo
-                valve = [1 if x[10] else 0 for x in window_data]
+                valve = [1 if x[6] else 0 for x in window_data]
 
                 temp_avg = sum(temps) / len(temps)
                 hum_avg = sum(hums) / len(hums)
