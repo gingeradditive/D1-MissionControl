@@ -37,24 +37,6 @@ echo "📦 Installo globalmente il server statico serve..."
 sudo npm install -g serve
 cd "$PROJECT_DIR"
 
-echo "🧹 Disabilito screen blanking..."
-cat <<EOF > ~/.xsessionrc
-xset s off
-xset -dpms
-xset s noblank
-EOF
-
-echo "🧠 Creo ~/.xinitrc per Chromium in modalità kiosk..."
-cat <<EOF > ~/.xinitrc
-#!/bin/sh
-source ~/.xsessionrc
-chromium-browser --noerrdialogs --disable-infobars --kiosk http://localhost:3000
-EOF
-chmod +x ~/.xinitrc
-
-echo "⚙️ Imposto Openbox come window manager..."
-echo "exec openbox-session" >> ~/.xinitrc
-
 echo "🚀 Creo servizio systemd per avvio automatico di X (startx)..."
 
 STARTX_SERVICE_PATH="/etc/systemd/system/startx.service"
@@ -139,9 +121,19 @@ EOF
 
 echo "File $POLKIT_FILE creato con successo."
 
-echo "🔄 Riavvio i servizi per applicare le modifiche..."
-sudo systemctl restart polkit
-sudo systemctl restart NetworkManager
+echo "🔌 ABILITO INTERFACCE HARDWARE (SPI, I2C)"
 
-echo "🔄 Riavvio il sistema per applicare le modifiche..."
-sudo reboot
+# Abilita SPI
+sudo sed -i 's/^#dtparam=spi=on/dtparam=spi=on/' /boot/config.txt
+if ! grep -q '^dtparam=spi=on' /boot/config.txt; then
+    echo 'dtparam=spi=on' | sudo tee -a /boot/config.txt
+fi
+
+# Abilita I2C
+sudo sed -i 's/^#dtparam=i2c_arm=on/dtparam=i2c_arm=on/' /boot/config.txt
+if ! grep -q '^dtparam=i2c_arm=on' /boot/config.txt; then
+    echo 'dtparam=i2c_arm=on' | sudo tee -a /boot/config.txt
+fi
+
+echo "spi-dev" | sudo tee -a /etc/modules
+echo "i2c-dev" | sudo tee -a /etc/modules
