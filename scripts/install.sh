@@ -145,14 +145,17 @@ echo "i2c-dev" | sudo tee -a /etc/modules
 
 
 USER="pi"
-echo "🔧 Configurazione permessi sudo per l'utente '$USER'..."
-SYSTEMCTL_PATH=$(which systemctl)
-if [[ -z "$SYSTEMCTL_PATH" ]]; then
-    echo "❌ systemctl non trovato!"
+echo "🔧 Configurazione permessi sudo per il reboot dell'utente '$USER'..."
+
+REBOOT_PATH=$(which reboot)
+if [[ -z "$REBOOT_PATH" ]]; then
+    echo "❌ reboot non trovato!"
     exit 1
 fi
-SUDOERS_FILE="/etc/sudoers.d/restart_dryer_services"
+
+SUDOERS_FILE="/etc/sudoers.d/reboot_without_password"
 cat <<EOF > "$SUDOERS_FILE"
-$USER ALL=NOPASSWD: $SYSTEMCTL_PATH restart dryer-frontend.service, $SYSTEMCTL_PATH restart getty@tty1.service, $SYSTEMCTL_PATH restart dryer-backend.service
+$USER ALL=NOPASSWD: $REBOOT_PATH
 EOF
+
 chmod 440 "$SUDOERS_FILE"
