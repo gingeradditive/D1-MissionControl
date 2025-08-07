@@ -43,12 +43,17 @@ class UpdateController:
         self.run_command("npm install", cwd=self.frontend_path)
         self.run_command("npm run build", cwd=self.frontend_path)
 
-    def reboot_device(self):
-        if IS_RASPBERRY:
-            print("Riavvio del Raspberry Pi...")
-            self.run_command("sudo reboot")
-        else:
-            print("[DEBUG] Reboot skipped (non-Raspberry environment)")
+    def restart_services(self):
+        services = [
+            "dryer-frontend.service",
+            "getty@tty1.service",
+            "dryer-backend.service"
+        ]
+
+        for service in services:
+            print(f"🔁 Riavvio del servizio: {service}")
+            self.run_command(f"sudo systemctl restart {service}")
+
 
     def full_update(self) -> bool:
         print("🔄 Eseguo git pull...")
@@ -64,7 +69,7 @@ class UpdateController:
         self.build_frontend()
 
         print("🔁 Riavvio necessario, lo eseguo ora...")
-        self.reboot_device()
+        self.restart_services()
         return True
 
 
