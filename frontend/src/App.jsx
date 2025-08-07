@@ -24,6 +24,14 @@ export default function App() {
 
   return (
     <KeyboardProvider>
+      {isKiosk && (
+        <style>{`
+          * {
+            cursor: none !important;
+          }
+        `}</style>
+      )}
+
       <Box
         sx={{
           backgroundColor: '#f5f5f5',
