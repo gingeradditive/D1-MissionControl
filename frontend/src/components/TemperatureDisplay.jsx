@@ -68,7 +68,7 @@ export default function TemperatureDisplay({ currentTemp, setpoint, status }) {
           }}
         >
           <Typography variant="h4">
-            {currentTemp !== null ? `${currentTemp.toFixed(1)}°` : "--"}
+            {currentTemp !== null ? `${currentTemp}°` : "--"}
           </Typography>
           <Typography variant="caption" color="gray">
             Set {setpoint !== null ? `${setpoint}°` : ""}

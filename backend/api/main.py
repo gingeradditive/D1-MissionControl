@@ -29,12 +29,12 @@ def background_loop():
     while running:
         dryer.update_fan_cooldown()
         dryer.update_valve()
-        now, max6675_temp, sht40_hum, sht40_temp = dryer.read_sensor()
+        now, max6675_temp, hum_abs, sht40_temp = dryer.read_sensor()
         dryer.update_heater_pid_discrete(max6675_temp)
         if time.time() - dryer.log_timer >= 10:
             dryer.log_timer = time.time()
             dryer.log(now.strftime('%Y-%m-%d %H:%M:%S'),
-                      max6675_temp, sht40_hum, sht40_temp)
+                      max6675_temp, hum_abs, sht40_temp)
         time.sleep(1)
 
 
@@ -45,12 +45,12 @@ thread.start()
 @app.get("/status")
 def get_status():
     latest = dryer.get_status_data()
-    timestamp, max6675_temp, sht40_temp, sht40_hum, ssr_heater, ssr_fan, status, valve = latest
+    timestamp, max6675_temp, sht40_temp, hum_abs, ssr_heater, ssr_fan, status, valve = latest
 
     return {
         "setpoint": dryer.set_temp,
-        "current_temp": round(max6675_temp, 2),
-        "current_humidity": round(sht40_hum, 2),
+        "current_temp": round(max6675_temp),
+        "current_humidity": round(hum_abs),
         "heater": ssr_heater,
         "fan": ssr_fan,
         "status": status,
@@ -81,15 +81,15 @@ def get_status(mode: str = Query(default="1h", enum=["1m", "1h", "12h"])):
             {
                 "timestamp": timestamp.strftime("%Y-%m-%d %H:%M:%S"),
                 "temperature": round(max6675_temp, 2),
-                "humidity": round(sht40_hum, 2),
+                "humidity": round(hum_abs, 2),
                 "heater_ratio": round(heater_ratio, 2),
                 "fan_ratio": round(fan_ratio, 2),
                 "temp_min": round(max6675_temp_min, 2),
                 "temp_max": round(max6675_temp_max, 2),
-                "hum_min": round(sht40_hum_min, 2),
-                "hum_max": round(sht40_hum_max, 2),
+                "hum_min": round(hum_abs_min, 2),
+                "hum_max": round(hum_abs_max, 2),
                 "valve": round(valve, 2),
-            } for timestamp, max6675_temp, sht40_hum, heater_ratio, fan_ratio, max6675_temp_min, max6675_temp_max, sht40_hum_min, sht40_hum_max, valve in history
+            } for timestamp, max6675_temp, hum_abs, heater_ratio, fan_ratio, max6675_temp_min, max6675_temp_max, hum_abs_min, hum_abs_max, valve in history
         ]
     }
 
