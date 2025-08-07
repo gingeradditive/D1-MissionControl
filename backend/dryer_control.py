@@ -3,6 +3,7 @@ import random
 from datetime import datetime, timedelta
 from collections import deque
 import sys
+import math
 
 from backend.config_control import ConfigController
 
@@ -62,7 +63,7 @@ class DryerController:
         self.log_file = f"logs/temperature_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         with open(self.log_file, "w") as f:
             f.write(
-                "timestamp;max6675_temp;sht40_temp;sht40_hum;ssr_heater;ssr_fan;setpoint;valve\n")
+                "timestamp;max6675_temp;sht40_temp;hum_abs;ssr_heater;ssr_fan;setpoint;valve\n")
 
         if IS_RASPBERRY:
             self.SSR_HEATER_GPIO = 23
@@ -117,9 +118,26 @@ class DryerController:
             self.valve_is_open = False
             print("Fan cooldown started.")
 
+    def compute_absolute_humidity(self, temp_c, rh_percent):
+        # temp_c: temperatura in gradi Celsius
+        # rh_percent: umidità relativa in %
+        # ritorna: umidità assoluta in grammi per metro cubo (g/m³)
+
+        # Calcolo pressione di vapore saturo (hPa)
+        p_sat = 6.112 * math.exp((17.67 * temp_c) / (temp_c + 243.5))
+
+        # Pressione parziale del vapore acqueo
+        p_vapor = p_sat * (rh_percent / 100.0)
+
+        # Umidità assoluta (g/m³)
+        ah = (2.1674 * p_vapor) / (273.15 + temp_c)
+
+        return ah
+
     def read_sensor(self):
         if IS_RASPBERRY:
             sht40_temp, sht40_hum = self.sht.measurements
+            hum_abs = self.compute_absolute_humidity(sht40_temp, sht40_hum)
 
             max6675_temp = 9999
             raw = self.spi.readbytes(2)
@@ -139,13 +157,13 @@ class DryerController:
 
             max6675_temp = self.prev_temp
             sht40_temp = self.prev_temp + random.uniform(-1, 1)
-            sht40_hum = self.prev_hum
+            hum_abs = self.prev_hum
 
         now = datetime.now()
         self.history.append(
-            (now, max6675_temp, sht40_temp, sht40_hum, self.ssr_heater, self.ssr_fan, self.valve_is_open))
+            (now, max6675_temp, sht40_temp, hum_abs, self.ssr_heater, self.ssr_fan, self.valve_is_open))
 
-        return now, max6675_temp, sht40_hum, sht40_temp
+        return now, max6675_temp, hum_abs, sht40_temp
 
     def update_heater_pid_discrete(self, temp):
         if not self.dryer_status:
@@ -183,10 +201,10 @@ class DryerController:
             self.last_heater_action = now
             print("Heater OFF")
 
-    def log(self, timestamp, max6675_temp, sht40_hum, sht40_temp):
+    def log(self, timestamp, max6675_temp, hum_abs, sht40_temp):
         with open(self.log_file, "a") as f:
             f.write(
-                f"{timestamp};{max6675_temp:.2f};{sht40_temp:.2f};{sht40_hum:.2f};{self.ssr_heater};{self.ssr_fan};{self.set_temp:.2f};{self.valve_is_open}\n")
+                f"{timestamp};{max6675_temp:.2f};{sht40_temp:.2f};{hum_abs:.2f};{self.ssr_heater};{self.ssr_fan};{self.set_temp:.2f};{self.valve_is_open}\n")
 
     def shutdown(self):
         if IS_RASPBERRY:
@@ -204,11 +222,11 @@ class DryerController:
             filtered = [x for x in data if (now - x[0]).total_seconds() <= 60]
             # Qui i valori sono singoli, ma possiamo fare anche min/max identici a temp stesso
             results = []
-            for timestamp, max6675_temp, sht40_temp, sht40_hum, ssr_heater, ssr_fan, valve in filtered:
+            for timestamp, max6675_temp, sht40_temp, hum_abs, ssr_heater, ssr_fan, valve in filtered:
                 heater_ratio = 1.0 if ssr_heater else 0.0
                 fan_ratio = 1.0 if ssr_fan else 0.0
-                results.append((timestamp, max6675_temp, sht40_hum, heater_ratio,
-                               fan_ratio, max6675_temp, max6675_temp, sht40_hum, sht40_hum, valve))
+                results.append((timestamp, max6675_temp, hum_abs, heater_ratio,
+                               fan_ratio, max6675_temp, max6675_temp, hum_abs, hum_abs, valve))
             return results
 
         elif mode == '1h':
@@ -300,9 +318,9 @@ class DryerController:
             data = datetime.now(), 0.0, 0.0, 0.0, 0.0, 0.0, False, False
         else:
             # Aggiungiamo dryer_status alla tupla con i nuovi dati
-            (timestamp, max6675_temp, sht40_temp, sht40_hum,
+            (timestamp, max6675_temp, sht40_temp, hum_abs,
              ssr_heater, ssr_fan, valve) = self.history[-1]
-            data = (timestamp, max6675_temp, sht40_temp, sht40_hum,
+            data = (timestamp, max6675_temp, sht40_temp, hum_abs,
                     ssr_heater, ssr_fan, self.dryer_status, valve)
         return data
 
@@ -367,7 +385,7 @@ class DryerController:
         self.valve_is_open = False
 
     def update_valve(self):
-        if(self.dryer_status):
+        if (self.dryer_status):
             now = time.time()
 
             if self.valve_is_open:
