@@ -20,6 +20,11 @@ sudo apt install --no-install-recommends -y \
     npm \
     git
 
+echo "📦 Aggiorno Node..."
+sudo apt-get remove nodejs
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
 echo "🐍 Creo ambiente virtuale Python..."
 python3 -m venv venv
 source venv/bin/activate
