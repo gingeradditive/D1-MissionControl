@@ -44,16 +44,9 @@ class UpdateController:
         self.run_command("npm run build", cwd=self.frontend_path)
 
     def restart_services(self):
-        services = [
-            "dryer-frontend.service",
-            "getty@tty1.service",
-            "dryer-backend.service"
-        ]
-
-        for service in services:
-            print(f"🔁 Riavvio del servizio: {service}")
-            self.run_command(f"sudo systemctl restart {service}")
-
+        print("🔁 Riavvio tramite script esterno...")
+        subprocess.Popen([self.project_path + "/scripts/restart_dryer_services.sh"])
+        print("✅ Script avviato in background, il backend può ora terminare.")
 
     def full_update(self) -> bool:
         print("🔄 Eseguo git pull...")
