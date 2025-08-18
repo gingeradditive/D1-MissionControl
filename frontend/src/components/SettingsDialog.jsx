@@ -77,14 +77,20 @@ export default function SettingsDialog({
     if (!config) return;
     setSaving(true);
     setSaveError(null);
+
     const keysToUpdate = Object.keys(config).filter(
       key => config[key] !== originalConfig[key]
     );
+
     Promise.all(
       keysToUpdate.map(key => api.setConfiguration(key, config[key]))
     )
       .then(() => {
+        return api.reloadConfigurations();
+      })
+      .then(() => {
         setOriginalConfig(config);
+        window.location.reload();
       })
       .catch(() => {
         setSaveError('Failed to save configuration.');
@@ -159,7 +165,7 @@ export default function SettingsDialog({
                     key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
                   return (
-                    <Grid item xs={6} key={key}>
+                    <Grid item size={6} key={key}>
                       <TextField
                         label={label}
                         type="number"

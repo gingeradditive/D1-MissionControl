@@ -8,7 +8,6 @@ export default function Controls({ direction, onClick }) {
       onClick={onClick}
       sx={{
         border: "2px solid #cccccc",
-        background: "#eeeeee",
         color: '#333'
       }}
     >

@@ -16,7 +16,7 @@ export default function DateTimeDisplay() {
     day: 'numeric',
   });
 
-  const formattedTime = dateTime.toLocaleTimeString();
+  const formattedTime = dateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   return (
     <Box
@@ -31,8 +31,7 @@ export default function DateTimeDisplay() {
         zIndex: 0,
       }}
     >
-      <Typography>{formattedDate}</Typography>
-      <Typography>{formattedTime}</Typography>
+      <Typography>{formattedDate} - {formattedTime}</Typography>
     </Box>
   );
 }

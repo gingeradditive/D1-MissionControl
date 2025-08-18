@@ -13,7 +13,7 @@ import { api } from '../api';
 export default function ChartDialog({ open, onClose }) {
     const isKiosk = new URLSearchParams(window.location.search).get("kiosk") === "true";
 
-    const [range, setRange] = useState('1m');
+    const [range, setRange] = useState('1h');
     const [chartData, setChartData] = useState([]);
     const [chartType, setChartType] = useState('temperature'); // 'temperature' or 'humidity'
 

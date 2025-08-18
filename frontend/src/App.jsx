@@ -34,7 +34,7 @@ export default function App() {
 
       <Box
         sx={{
-          backgroundColor: '#f5f5f5',
+          backgroundColor: '#E0E0E0',
           minHeight: '90vh',
           display: 'flex',
           alignItems: 'center',
@@ -54,7 +54,7 @@ export default function App() {
             color: '#333',
             borderRadius: 4,
             p: 3,
-            boxShadow: 2,
+            boxShadow: 6,
             zIndex: 1,
           }}
         >

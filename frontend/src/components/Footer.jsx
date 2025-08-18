@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Box, Typography, Switch, styled } from "@mui/material";
 import WaterDropIcon from "@mui/icons-material/WaterDrop";
 import PowerSettingsNewIcon from "@mui/icons-material/PowerSettingsNew";
+import CheckLight from './CheckLight';
 
 const StyledSwitch = styled(Switch)(({ theme }) => ({
   width: 56.5,
@@ -31,7 +32,7 @@ const StyledSwitch = styled(Switch)(({ theme }) => ({
   },
 }));
 
-export default function Footer({ ext_hum, int_hum, status, onStatusChange }) {
+export default function Footer({ ext_hum, int_hum, status, onStatusChange, heater, fan, valve }) {
   const [checked, setChecked] = useState(status);
 
   // Sync internal state with external prop
@@ -50,7 +51,6 @@ export default function Footer({ ext_hum, int_hum, status, onStatusChange }) {
       display="flex"
       justifyContent="space-between"
       alignItems="center"
-      bgcolor="#fafafa"
       p={1}
       borderRadius={2}
       mt={2}
@@ -64,18 +64,26 @@ export default function Footer({ ext_hum, int_hum, status, onStatusChange }) {
         <Typography variant="h6" sx={{ ml: 0.5 }}>{int_hum !== null ? `${int_hum}` : "-"}</Typography>
         <Typography variant="caption" sx={{ fontSize: '0.9em', ml: 0.2 }}>mg/m³</Typography>
       </Box>
-      <Box position="relative" display="flex" justifyContent="end" alignItems="center">
-        <StyledSwitch checked={checked} onChange={handleChange} />
-        <Box
-          position="absolute"
-          left={checked ? 37 : 4.5}
-          top={10}
-          pointerEvents="none"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <PowerSettingsNewIcon style={{ fontSize: 14, color: "gray" }} />
+      <Box position="relative" display="flex" justifyContent="end" alignItems="center"> 
+        <CheckLight
+          heaterOn={heater}
+          fanOn={fan}
+          timerSet={false} // TODO: implement timerSet logic
+          valveOpen={valve}
+        />
+        <Box position="relative" display="flex" justifyContent="end" alignItems="center" ml={3}>
+          <StyledSwitch checked={checked} onChange={handleChange} />
+          <Box
+            position="absolute"
+            left={checked ? 37 : 4.5}
+            top={10}
+            pointerEvents="none"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+          >
+            <PowerSettingsNewIcon style={{ fontSize: 14, color: "gray" }} />
+          </Box>
         </Box>
       </Box>
     </Box>

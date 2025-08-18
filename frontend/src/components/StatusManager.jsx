@@ -3,7 +3,6 @@ import { Box } from '@mui/material';
 import TemperatureDisplay from './TemperatureDisplay';
 import Controls from './Controls';
 import Footer from './Footer';
-import CheckLight from './CheckLight';
 import { api } from '../api';
 import ScreensaverOverlay from './ScreensaverOverlay';
 
@@ -112,25 +111,20 @@ export default function StatusManager() {
         <Controls direction="up" onClick={handleIncrease} />
       </Box>
 
-      <Box display="flex" justifyContent="end" alignItems="center" mx={4}>
-        <CheckLight
-          heaterOn={status.heater}
-          fanOn={status.fan}
-          timerSet={false} // TODO: implement timerSet logic
-          valveOpen={status.valve}
-        />
-      </Box>
-
       <Footer
         ext_hum="---"
         int_hum={status.current_humidity}
         status={status.status}
+        heater={status.heater}
+        fan={status.fan}
+        valve={status.valve}
         onStatusChange={handleStatusChange}
       />
 
       {isKiosk && isScreensaverActive && (
         <ScreensaverOverlay
           temperature={status.current_temp}
+          status={status.status}
           onExit={() => {
             setIsScreensaverActive(false);
             lastInteractionTime.current = Date.now();

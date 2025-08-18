@@ -104,7 +104,7 @@ export default function VirtualKeyboard() {
           bottom: 0,
           left: 0,
           right: 0,
-          background: '#f5f5f5',
+          background: '#E0E0E0',
           zIndex: 9999,
           borderTop: '1px solid #ccc',
           padding: '12px 8px 8px',

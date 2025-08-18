@@ -28,6 +28,7 @@ export const api = {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     }
   ),
+  reloadConfigurations: () => apiClient.get("/config/reload"),
   getConfiguration: (key) => apiClient.get(`/config/${key}`),
   
   getUpdateVersion: () => apiClient.get("/update/version"),

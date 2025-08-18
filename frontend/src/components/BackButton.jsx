@@ -27,7 +27,7 @@ export default function BackButton({ onClick }) {
             backgroundColor: '#f0f0f0',
             borderColor: '#d72e28',
           },
-          boxShadow: 2,
+          boxShadow: 6,
           padding: '8px 16px',
         }}
       >

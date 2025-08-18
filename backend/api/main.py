@@ -9,7 +9,7 @@ from datetime import datetime
 import time
 
 app = FastAPI()
-dryer = DryerController()  # default value
+dryer = DryerController()
 network = NetworkController()
 update = UpdateController(".")
 config = ConfigController()
@@ -173,6 +173,14 @@ def set_config(key: str = Form(...), value: str = Form(...)):
     config.set_config_param(key, value)
     return {"status": "Success", "message": "Updated configuration"}
 
+@app.get("/config/reload")
+def reload_config():
+    global dryer, network, update
+    dryer = DryerController()
+    network = NetworkController()
+    update = UpdateController(".")
+    print("Configurazioni ricaricate")
+    return {"status": "Success", "message": "Controllers reloaded"}
 
 @app.get("/config/{key}")
 def get_config_by_key(key: str):

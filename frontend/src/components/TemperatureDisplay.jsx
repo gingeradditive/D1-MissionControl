@@ -6,13 +6,14 @@ export default function TemperatureDisplay({ currentTemp, setpoint, status }) {
   const animated = status;
 
   return (
-    <Box textAlign="center">
+    <Box textAlign="center" sx={{ height: "126px", marginBottom: "36px" }}>
       <Box
         sx={{
-          width: 126,
-          height: 126,
+          width: 200,
+          height: 200,
           position: "relative",
           margin: "auto",
+          top: "-37px"
         }}
       >
         {/* Cerchi */}
@@ -31,10 +32,10 @@ export default function TemperatureDisplay({ currentTemp, setpoint, status }) {
         <Box
           sx={{
             position: "absolute",
-            top: 4,
-            left: 4,
-            width: 116,
-            height: 116,
+            top: 7,
+            left: 7,
+            width: 185,
+            height: 185,
             border: `2px dotted ${ringColor}`,
             borderRadius: "50%",
             animation: animated ? "pulse2 6s ease-in-out infinite" : "none",
@@ -43,10 +44,10 @@ export default function TemperatureDisplay({ currentTemp, setpoint, status }) {
         <Box
           sx={{
             position: "absolute",
-            top: 10,
-            left: 10,
-            width: 104,
-            height: 104,
+            top: 15,
+            left: 15,
+            width: 170,
+            height: 170,
             border: `2px solid ${ringColor}`,
             borderRadius: "50%",
             animation: animated ? "pulse3 3s ease-in-out infinite" : "none",
@@ -67,10 +68,10 @@ export default function TemperatureDisplay({ currentTemp, setpoint, status }) {
             justifyContent: "center",
           }}
         >
-          <Typography variant="h4">
+          <Typography variant="h2" pl={3}>
             {currentTemp !== null ? `${currentTemp}°` : "--"}
           </Typography>
-          <Typography variant="caption" color="gray">
+          <Typography variant="body2" color="gray">
             Set {setpoint !== null ? `${setpoint}°` : ""}
           </Typography>
         </Box>

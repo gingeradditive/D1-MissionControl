@@ -103,7 +103,6 @@ export default function Header() {
           </IconButton>
           <IconButton onClick={handleOpen('alarm')}><AccessAlarmIcon /></IconButton>
         </Box>
-        <Typography variant="body2" my={1}>Ginger Dryer</Typography>
         <Box display="flex" alignItems="center">
           <IconButton onClick={handleOpen('chart')}><AreaChartIcon /></IconButton>
           <IconButton onClick={handleOpen('settings')}><SettingsIcon /></IconButton>
