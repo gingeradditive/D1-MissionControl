@@ -146,7 +146,16 @@ export default function SettingsDialog({
           Settings
         </Box>
       </DialogTitle>
-      <DialogContent dividers>
+      <DialogContent
+        dividers
+        sx={{
+          // Aumenta la larghezza delle scrollbar solo in modalità kiosk
+          '&::-webkit-scrollbar': isKiosk ? { width: '24px', height: '24px' } : {},
+          '&::-webkit-scrollbar-thumb': isKiosk ? { backgroundColor: '#888', borderRadius: '4px' } : {},
+          '&::-webkit-scrollbar-track': isKiosk ? { backgroundColor: '#f1f1f1', borderRadius: '4px' } : {},
+        }}
+      >
+
         {loading && <CircularProgress />}
         {saveError && (
           <Typography color="error" mb={2}>
