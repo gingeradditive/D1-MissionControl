@@ -22,6 +22,47 @@ export default function App() {
     checkG1OS();
   }, []);
 
+  useEffect(() => {
+    if (isKiosk) {
+      const meta = document.createElement("meta");
+      meta.name = "viewport";
+      meta.content = "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no";
+      document.head.appendChild(meta);
+
+      return () => {
+        document.head.removeChild(meta);
+      };
+    }
+  }, [isKiosk]);
+
+  useEffect(() => {
+    if (isKiosk) {
+      const preventZoom = (e) => {
+        if (
+          (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '=')) ||
+          e.key === "Meta"
+        ) {
+          e.preventDefault();
+        }
+      };
+
+      const preventWheel = (e) => {
+        if (e.ctrlKey) {
+          e.preventDefault();
+        }
+      };
+
+      document.addEventListener("keydown", preventZoom, { passive: false });
+      document.addEventListener("wheel", preventWheel, { passive: false });
+
+      return () => {
+        document.removeEventListener("keydown", preventZoom);
+        document.removeEventListener("wheel", preventWheel);
+      };
+    }
+  }, [isKiosk]);
+
+
   return (
     <KeyboardProvider>
       {isKiosk && (
