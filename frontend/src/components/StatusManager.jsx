@@ -1,12 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
-import { Box } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 import TemperatureDisplay from './TemperatureDisplay';
 import Controls from './Controls';
 import Footer from './Footer';
 import { api } from '../api';
 import ScreensaverOverlay from './ScreensaverOverlay';
 import { useSnackbar } from 'notistack';
-import { IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
 export default function StatusManager() {
@@ -14,11 +13,11 @@ export default function StatusManager() {
 
   const [isScreensaverActive, setIsScreensaverActive] = useState(false);
   const [inactivityTimeout, setInactivityTimeout] = useState(null);
-  const lastInteractionTime = useRef(Date.now()); // usare ref per evitare dipendenze extra
+  const lastInteractionTime = useRef(Date.now());
 
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const activeErrorsRef = useRef(new Map()); // description_date → snackbarId
-  const shownErrorsRef = useRef(new Set());
+  const updateSnackbarRef = useRef(null);   // unico toast per update disponibile
 
   const [status, setStatus] = useState({
     current_temp: null,
@@ -28,7 +27,7 @@ export default function StatusManager() {
     fan: false,
     status: false,
     valve: false,
-    errors: {} //"errors": {"Simulazione errore sensore": "2025-09-18T16:38:10.298137"}
+    errors: {}
   });
 
   // Mostra toast per nuovi errori
@@ -39,7 +38,6 @@ export default function StatusManager() {
       )
     );
 
-    // 1. Mostra toast per nuovi errori
     Object.entries(status.errors).forEach(([description, date]) => {
       const key = `${description}_${date}`;
       if (!activeErrorsRef.current.has(key)) {
@@ -47,7 +45,7 @@ export default function StatusManager() {
           `${new Date(date).toLocaleString()} - ${description}`,
           {
             variant: "error",
-            persist: true, // 👈 rimane finché non lo chiudiamo noi
+            persist: true,
             action: (snackbarId) => (
               <IconButton
                 onClick={() => {
@@ -65,7 +63,6 @@ export default function StatusManager() {
       }
     });
 
-    // 2. Chiudi i toast degli errori che non ci sono più
     activeErrorsRef.current.forEach((snackbarId, key) => {
       if (!currentKeys.has(key)) {
         closeSnackbar(snackbarId);
@@ -79,7 +76,7 @@ export default function StatusManager() {
     const fetchTimeout = async () => {
       try {
         const response = await api.getConfiguration("inactivity_timeout");
-        setInactivityTimeout(response.data); // Assicurati che sia il valore in secondi
+        setInactivityTimeout(response.data);
       } catch (error) {
         console.error("Errore durante il fetch:", error);
       }
@@ -98,6 +95,26 @@ export default function StatusManager() {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Controllo aggiornamenti
+  useEffect(() => {
+    const checkUpdate = async () => {
+      try {
+        const response = await api.getUpdateCheck();
+        if (response.data.updateAvailable && !updateSnackbarRef.current) {
+          const id = enqueueSnackbar(
+            "Update available! Please open settings and update the Dryer.",
+            { variant: "info", persist: true }
+          );
+          updateSnackbarRef.current = id;
+        }
+      } catch (error) {
+        console.error("Error checking for updates:", error);
+      }
+    };
+
+    checkUpdate();
+  }, [enqueueSnackbar]);
 
   // Event handler per interazione utente
   const resetTimer = () => {
