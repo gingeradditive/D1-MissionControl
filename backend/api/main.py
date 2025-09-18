@@ -55,6 +55,7 @@ def get_status():
         "fan": ssr_fan,
         "status": status,
         "valve": valve,
+        "errors": dryer.errors
     }
 
 

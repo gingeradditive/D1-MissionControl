@@ -9,6 +9,7 @@ import { api } from './api';
 import "react-simple-keyboard/build/css/index.css";
 import { KeyboardProvider } from './KeyboardContext';
 import VirtualKeyboard from './components/VirtualKeyboard';
+import { SnackbarProvider } from 'notistack';
 
 export default function App() {
   const [showBackButton, setShowBackButton] = useState(false);
@@ -64,69 +65,71 @@ export default function App() {
 
 
   return (
-    <KeyboardProvider>
-      {isKiosk && (
-        <style>{`
+    <SnackbarProvider maxSnack={15} autoHideDuration={null} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
+      <KeyboardProvider>
+        {isKiosk && (
+          <style>{`
           * {
             cursor: none !important;
           }
         `}</style>
-      )}
-
-      <Box
-        sx={{
-          backgroundColor: '#E0E0E0',
-          minHeight: '90vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          network: {
-            connected: false,
-            ssid: "",
-            strength: 0
-          }
-        }}
-      >
-        <Container
-          maxWidth="sm"
-          sx={{
-            backgroundColor: '#fff',
-            color: '#333',
-            borderRadius: 4,
-            p: 3,
-            boxShadow: 6,
-            zIndex: 1,
-          }}
-        >
-          <Header />
-          <StatusManager />
-        </Container>
-
-        <Box
-          component="img"
-          src="/Logo_ginger.svg"
-          alt="Logo Ginger"
-          sx={{
-            position: 'fixed',
-            bottom: 16,
-            right: 16,
-            width: "8vw",
-            maxWidth: 100,
-            height: 'auto',
-            opacity: 0.7,
-            zIndex: 0,
-            pointerEvents: 'none',
-          }}
-        />
-
-        {showBackButton && !isKiosk && (
-          <BackButton onClick={() => window.location.href = 'https://g1os.local'} />
         )}
 
-        <DateTimeDisplay />
-      </Box>
-      <VirtualKeyboard />
-    </KeyboardProvider>
+        <Box
+          sx={{
+            backgroundColor: '#E0E0E0',
+            minHeight: '90vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            network: {
+              connected: false,
+              ssid: "",
+              strength: 0
+            }
+          }}
+        >
+          <Container
+            maxWidth="sm"
+            sx={{
+              backgroundColor: '#fff',
+              color: '#333',
+              borderRadius: 4,
+              p: 3,
+              boxShadow: 6,
+              zIndex: 1,
+            }}
+          >
+            <Header />
+            <StatusManager />
+          </Container>
+
+          <Box
+            component="img"
+            src="/Logo_ginger.svg"
+            alt="Logo Ginger"
+            sx={{
+              position: 'fixed',
+              bottom: 16,
+              right: 16,
+              width: "8vw",
+              maxWidth: 100,
+              height: 'auto',
+              opacity: 0.7,
+              zIndex: 0,
+              pointerEvents: 'none',
+            }}
+          />
+
+          {showBackButton && !isKiosk && (
+            <BackButton onClick={() => window.location.href = 'https://g1os.local'} />
+          )}
+
+          <DateTimeDisplay />
+        </Box>
+        <VirtualKeyboard />
+      </KeyboardProvider>
+    </SnackbarProvider >
   );
 }

@@ -56,6 +56,8 @@ class DryerController:
         self.valve_is_open = False
         self.valve_last_switch_time = time.time()
 
+        self.errors = {}
+
         # DEMO VALUES
         self.prev_temp = random.uniform(20, 30)
         self.prev_hum = random.uniform(30, 50)
@@ -142,15 +144,13 @@ class DryerController:
 
                 max6675_temp = 9999
                 raw = self.spi.readbytes(2)
-                if len(raw) == 2:  # corretto controllo
+                if len(raw) == 2:
                     value = (raw[0] << 8) | raw[1]
                     if not value & 0x4:
                         max6675_temp = (value >> 3) * 0.25
-
             else:
-                # Variazione lenta
+                # simulazione lenta
                 self.prev_temp += random.uniform(-0.5, 0.5)
-                # Limita l'intervallo
                 self.prev_temp = max(15, min(70, self.prev_temp))
 
                 self.prev_hum += random.uniform(-1, 1)
@@ -160,6 +160,14 @@ class DryerController:
                 sht40_temp = self.prev_temp + random.uniform(-1, 1)
                 hum_abs = self.prev_hum
 
+                if random.random() < 0.5:
+                    raise OSError("Simulazione errore read_sensor")
+
+            # --- se arrivo qui, nessun errore ---
+            # rimuovo eventuali errori presenti
+            if hasattr(self, "errors"):
+                self.errors.clear()
+
             now = datetime.now()
             self.history.append(
                 (now, max6675_temp, sht40_temp, hum_abs, self.ssr_heater, self.ssr_fan, self.valve_is_open)
@@ -168,12 +176,16 @@ class DryerController:
             return now, max6675_temp, hum_abs, sht40_temp
 
         except Exception as e:
-            import traceback
-            print(f"[read_sensor] Errore durante la lettura: {e}")
-            traceback.print_exc()
+            print(f"Errore lettura sensori: {e}", file=sys.stderr)
+            now = datetime.now()
+            if not hasattr(self, "errors"):
+                self.errors = {}
 
-            # TODO: segnalare tramite toast in qualche modo al frontend
-            return 999, 999, 999, 999
+            if str(e) not in self.errors:
+                self.errors[str(e)] = now
+
+            return now, 999, 999, 999
+
 
     def update_heater_pid_discrete(self, temp):
         if not self.dryer_status:

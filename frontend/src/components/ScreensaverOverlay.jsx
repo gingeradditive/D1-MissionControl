@@ -103,7 +103,6 @@ const ScreensaverOverlay = ({ onExit, temperature, status }) => {
           width: "8vw",
           maxWidth: 100,
           height: 'auto',
-          opacity: 0.7,
           zIndex: 0,
           pointerEvents: 'none',
           opacity: 0.5

@@ -5,6 +5,9 @@ import Controls from './Controls';
 import Footer from './Footer';
 import { api } from '../api';
 import ScreensaverOverlay from './ScreensaverOverlay';
+import { useSnackbar } from 'notistack';
+import { IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 
 export default function StatusManager() {
   const isKiosk = new URLSearchParams(window.location.search).get("kiosk") === "true";
@@ -13,6 +16,10 @@ export default function StatusManager() {
   const [inactivityTimeout, setInactivityTimeout] = useState(null);
   const lastInteractionTime = useRef(Date.now()); // usare ref per evitare dipendenze extra
 
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const activeErrorsRef = useRef(new Map()); // description_date → snackbarId
+  const shownErrorsRef = useRef(new Set());
+
   const [status, setStatus] = useState({
     current_temp: null,
     setpoint: null,
@@ -20,8 +27,52 @@ export default function StatusManager() {
     heater: false,
     fan: false,
     status: false,
-    valve: false
+    valve: false,
+    errors: {} //"errors": {"Simulazione errore sensore": "2025-09-18T16:38:10.298137"}
   });
+
+  // Mostra toast per nuovi errori
+  useEffect(() => {
+    const currentKeys = new Set(
+      Object.entries(status.errors).map(
+        ([description, date]) => `${description}_${date}`
+      )
+    );
+
+    // 1. Mostra toast per nuovi errori
+    Object.entries(status.errors).forEach(([description, date]) => {
+      const key = `${description}_${date}`;
+      if (!activeErrorsRef.current.has(key)) {
+        const snackbarId = enqueueSnackbar(
+          `${new Date(date).toLocaleString()} - ${description}`,
+          {
+            variant: "error",
+            persist: true, // 👈 rimane finché non lo chiudiamo noi
+            action: (snackbarId) => (
+              <IconButton
+                onClick={() => {
+                  closeSnackbar(snackbarId);
+                  activeErrorsRef.current.delete(key);
+                }}
+                size="small"
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            )
+          }
+        );
+        activeErrorsRef.current.set(key, snackbarId);
+      }
+    });
+
+    // 2. Chiudi i toast degli errori che non ci sono più
+    activeErrorsRef.current.forEach((snackbarId, key) => {
+      if (!currentKeys.has(key)) {
+        closeSnackbar(snackbarId);
+        activeErrorsRef.current.delete(key);
+      }
+    });
+  }, [status.errors, enqueueSnackbar, closeSnackbar]);
 
   // Fetch configurazione timeout
   useEffect(() => {
