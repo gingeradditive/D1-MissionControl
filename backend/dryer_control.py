@@ -397,14 +397,14 @@ class DryerController:
 
     def valve_open(self):
         if IS_RASPBERRY:
-            self.set_angle(0)
+            self.set_angle(90)
         else:
             print("Opening valve...")
         self.valve_is_open = True
 
     def valve_close(self):
         if IS_RASPBERRY:
-            self.set_angle(90)
+            self.set_angle(0)
         else:
             print("Closing valve...")
         self.valve_is_open = False
