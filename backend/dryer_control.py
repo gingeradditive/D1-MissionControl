@@ -105,6 +105,7 @@ class DryerController:
                 GPIO.output(self.SSR_FAN_GPIO, GPIO.HIGH)
             self.ssr_fan = True
             self.valve_last_switch_time = time.time()
+            self.valve_close()
             print("Heater started.")
 
     def stop(self):
@@ -114,10 +115,12 @@ class DryerController:
                 GPIO.output(self.SSR_HEATER_GPIO, GPIO.LOW)
             self.ssr_heater = False
             print("Heater stopped.")
-
+            
             self.fan_cooldown_end = time.time() + self.fan_cooldown_duration
             self.cooldown_active = True
             self.valve_is_open = False
+
+            self.valve_close()
             print("Fan cooldown started.")
 
     def compute_absolute_humidity(self, temp_c, rh_percent):
