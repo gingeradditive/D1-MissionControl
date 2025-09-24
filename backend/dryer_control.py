@@ -55,7 +55,8 @@ class DryerController:
         self.cooldown_active = False
         self.valve_is_open = False
         self.valve_last_switch_time = time.time()
-
+        self.hum_abs = 0; 
+        
         self.errors = {}
 
         # DEMO VALUES
@@ -65,7 +66,7 @@ class DryerController:
         self.log_file = f"logs/temperature_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         with open(self.log_file, "w") as f:
             f.write(
-                "timestamp;max6675_temp;sht40_temp;hum_abs;ssr_heater;ssr_fan;setpoint;valve\n")
+                "timestamp;max6675_temp;sht40_temp;dew_point;ssr_heater;ssr_fan;setpoint;valve\n")
 
         if IS_RASPBERRY:
             self.SSR_HEATER_GPIO = 23
@@ -139,11 +140,22 @@ class DryerController:
 
         return ah
 
+    def compute_dew_point(self, temp_c, rh_percent):
+        # Calcolo del punto di rugiada usando la formula di Magnus-Tetens
+        a = 17.27
+        b = 237.7  # °C
+
+        alpha = ((a * temp_c) / (b + temp_c)) + math.log(rh_percent / 100.0)
+        dew_point = (b * alpha) / (a - alpha)
+
+        return dew_point
+
     def read_sensor(self):
         try:
             if IS_RASPBERRY:
                 sht40_temp, sht40_hum = self.sht.measurements
-                hum_abs = self.compute_absolute_humidity(sht40_temp, sht40_hum)
+                self.hum_abs = self.compute_absolute_humidity(sht40_temp, sht40_hum)
+                dew_point = self.compute_dew_point(sht40_temp, sht40_hum)
 
                 max6675_temp = 9999
                 raw = self.spi.readbytes(2)
@@ -161,7 +173,8 @@ class DryerController:
 
                 max6675_temp = self.prev_temp
                 sht40_temp = self.prev_temp + random.uniform(-1, 1)
-                hum_abs = self.prev_hum
+                self.hum_abs = self.prev_hum
+                dew_point = self.compute_dew_point(sht40_temp, (self.hum_abs / 30.0) * 100.0)
 
                 if random.random() < 0.5:
                     raise OSError("Simulazione errore read_sensor")
@@ -173,10 +186,10 @@ class DryerController:
 
             now = datetime.now()
             self.history.append(
-                (now, max6675_temp, sht40_temp, hum_abs, self.ssr_heater, self.ssr_fan, self.valve_is_open)
+                (now, max6675_temp, sht40_temp, dew_point, self.ssr_heater, self.ssr_fan, self.valve_is_open)
             )
 
-            return now, max6675_temp, hum_abs, sht40_temp
+            return now, max6675_temp, self.hum_abs, sht40_temp, dew_point
 
         except Exception as e:
             print(f"Errore lettura sensori: {e}", file=sys.stderr)
@@ -187,7 +200,7 @@ class DryerController:
             if str(e) not in self.errors:
                 self.errors[str(e)] = now
 
-            return now, 999, 999, 999
+            return now, 999, 999, 999, 999
 
 
     def update_heater_pid_discrete(self, temp):
@@ -226,10 +239,10 @@ class DryerController:
             self.last_heater_action = now
             print("Heater OFF")
 
-    def log(self, timestamp, max6675_temp, hum_abs, sht40_temp):
+    def log(self, timestamp, max6675_temp, dew_point, sht40_temp):
         with open(self.log_file, "a") as f:
             f.write(
-                f"{timestamp};{max6675_temp:.2f};{sht40_temp:.2f};{hum_abs:.2f};{self.ssr_heater};{self.ssr_fan};{self.set_temp:.2f};{self.valve_is_open}\n")
+                f"{timestamp};{max6675_temp:.2f};{sht40_temp:.2f};{dew_point:.2f};{self.ssr_heater};{self.ssr_fan};{self.set_temp:.2f};{self.valve_is_open}\n")
 
     def shutdown(self):
         if IS_RASPBERRY:
@@ -247,11 +260,11 @@ class DryerController:
             filtered = [x for x in data if (now - x[0]).total_seconds() <= 60]
             # Qui i valori sono singoli, ma possiamo fare anche min/max identici a temp stesso
             results = []
-            for timestamp, max6675_temp, sht40_temp, hum_abs, ssr_heater, ssr_fan, valve in filtered:
+            for timestamp, max6675_temp, sht40_temp, dew_point, ssr_heater, ssr_fan, valve in filtered:
                 heater_ratio = 1.0 if ssr_heater else 0.0
                 fan_ratio = 1.0 if ssr_fan else 0.0
-                results.append((timestamp, max6675_temp, hum_abs, heater_ratio,
-                               fan_ratio, max6675_temp, max6675_temp, hum_abs, hum_abs, valve))
+                results.append((timestamp, max6675_temp, dew_point, heater_ratio,
+                               fan_ratio, max6675_temp, max6675_temp, dew_point, dew_point, valve))
             return results
 
         elif mode == '1h':
@@ -268,7 +281,7 @@ class DryerController:
                 if not window_data:
                     continue
                 temps = [x[1] for x in window_data]
-                hums = [x[3] for x in window_data]
+                dews = [x[3] for x in window_data]
                 heaters = [1 if x[4] else 0 for x in window_data]
                 fans = [1 if x[5] else 0 for x in window_data]
                 timestamp = window_start + \
@@ -276,20 +289,20 @@ class DryerController:
                 valve = [1 if x[6] else 0 for x in window_data]
 
                 temp_avg = sum(temps) / len(temps)
-                hum_avg = sum(hums) / len(hums)
+                dews_avg = sum(dews) / len(dews)
                 heater_ratio = sum(heaters) / len(heaters)
                 fan_ratio = sum(fans) / len(fans)
                 valve_ration = sum(valve) / len(valve)
                 results.append((
                     timestamp,
                     temp_avg,
-                    hum_avg,
+                    dews_avg,
                     heater_ratio,
                     fan_ratio,
                     min(temps),
                     max(temps),
-                    min(hums),
-                    max(hums),
+                    min(dews),
+                    max(dews),
                     valve_ration
                 ))
             return results
@@ -308,7 +321,7 @@ class DryerController:
                 if not window_data:
                     continue
                 temps = [x[1] for x in window_data]
-                hums = [x[3] for x in window_data]
+                dews = [x[3] for x in window_data]
                 heaters = [1 if x[4] else 0 for x in window_data]
                 fans = [1 if x[5] else 0 for x in window_data]
                 timestamp = window_start + \
@@ -316,7 +329,7 @@ class DryerController:
                 valve = [1 if x[6] else 0 for x in window_data]
 
                 temp_avg = sum(temps) / len(temps)
-                hum_avg = sum(hums) / len(hums)
+                dews_avg = sum(dews) / len(dews)
                 heater_ratio = sum(heaters) / len(heaters)
                 fan_ratio = sum(fans) / len(fans)
                 valve_ration = sum(valve) / len(valve)
@@ -324,13 +337,13 @@ class DryerController:
                 results.append((
                     timestamp,
                     temp_avg,
-                    hum_avg,
+                    dews_avg,
                     heater_ratio,
                     fan_ratio,
                     min(temps),
                     max(temps),
-                    min(hums),
-                    max(hums),
+                    min(dews),
+                    max(dews),
                     valve_ration
                 ))
             return results
@@ -343,10 +356,10 @@ class DryerController:
             data = datetime.now(), 0.0, 0.0, 0.0, 0.0, 0.0, False, False
         else:
             # Aggiungiamo dryer_status alla tupla con i nuovi dati
-            (timestamp, max6675_temp, sht40_temp, hum_abs,
+            (timestamp, max6675_temp, sht40_temp, dew_point,
              ssr_heater, ssr_fan, valve) = self.history[-1]
-            data = (timestamp, max6675_temp, sht40_temp, hum_abs,
-                    ssr_heater, ssr_fan, self.dryer_status, valve)
+            data = (timestamp, max6675_temp, sht40_temp, dew_point,
+                    ssr_heater, ssr_fan, self.dryer_status, valve, self.hum_abs)
         return data
 
     def aggregate_data(self, data, now, interval_seconds, window_seconds):

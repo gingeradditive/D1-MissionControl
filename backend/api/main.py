@@ -29,12 +29,12 @@ def background_loop():
     while running:
         dryer.update_fan_cooldown()
         dryer.update_valve()
-        now, max6675_temp, hum_abs, sht40_temp = dryer.read_sensor()
+        now, max6675_temp, hum_abs, sht40_temp, dew_point = dryer.read_sensor()
         dryer.update_heater_pid_discrete(max6675_temp)
         if time.time() - dryer.log_timer >= 10:
             dryer.log_timer = time.time()
             dryer.log(now.strftime('%Y-%m-%d %H:%M:%S'),
-                      max6675_temp, hum_abs, sht40_temp)
+                      max6675_temp, dew_point, sht40_temp)
         time.sleep(1)
 
 
@@ -45,12 +45,13 @@ thread.start()
 @app.get("/status")
 def get_status():
     latest = dryer.get_status_data()
-    timestamp, max6675_temp, sht40_temp, hum_abs, ssr_heater, ssr_fan, status, valve = latest
+    timestamp, max6675_temp, sht40_temp, dew_point, ssr_heater, ssr_fan, status, valve, hum_abs = latest
 
     return {
         "setpoint": dryer.set_temp,
         "current_temp": round(max6675_temp),
         "current_humidity": round(hum_abs),
+        "dew_point": round(dew_point),
         "heater": ssr_heater,
         "fan": ssr_fan,
         "status": status,

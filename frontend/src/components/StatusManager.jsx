@@ -23,6 +23,7 @@ export default function StatusManager() {
     current_temp: null,
     setpoint: null,
     current_humidity: null,
+    dew_point: null,
     heater: false,
     fan: false,
     status: false,
@@ -182,6 +183,7 @@ export default function StatusManager() {
       <Footer
         ext_hum="---"
         int_hum={status.current_humidity}
+        dew_point={status.dew_point}
         status={status.status}
         heater={status.heater}
         fan={status.fan}

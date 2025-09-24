@@ -59,7 +59,6 @@ const ScreensaverOverlay = ({ onExit, temperature, status }) => {
         sx={{
           position: "absolute",
           top: 15,
-          left: 15,
           width: 340,
           height: 340,
           border: `4px solid ${ringColor}`,

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Box, Typography, Switch, styled } from "@mui/material";
 import WaterDropIcon from "@mui/icons-material/WaterDrop";
 import PowerSettingsNewIcon from "@mui/icons-material/PowerSettingsNew";
+import DewPointIcon from '@mui/icons-material/DewPoint';
 import CheckLight from './CheckLight';
 
 const StyledSwitch = styled(Switch)(({ theme }) => ({
@@ -32,7 +33,7 @@ const StyledSwitch = styled(Switch)(({ theme }) => ({
   },
 }));
 
-export default function Footer({ ext_hum, int_hum, status, onStatusChange, heater, fan, valve }) {
+export default function Footer({ ext_hum, int_hum, dew_point, status, onStatusChange, heater, fan, valve }) {
   const [checked, setChecked] = useState(status);
 
   // Sync internal state with external prop
@@ -63,6 +64,9 @@ export default function Footer({ ext_hum, int_hum, status, onStatusChange, heate
         <WaterDropIcon fontSize="small" />
         <Typography variant="h6" sx={{ ml: 0.5 }}>{int_hum !== null ? `${int_hum}` : "-"}</Typography>
         <Typography variant="caption" sx={{ fontSize: '0.9em', ml: 0.2 }}>mg/m³</Typography>
+        <DewPointIcon fontSize="small" sx={{ ml: 2 }}/>
+        <Typography variant="h6" sx={{ ml: 0.5 }}>{dew_point !== null ? `${dew_point}` : "-"}</Typography>
+        <Typography variant="caption" sx={{ fontSize: '0.9em', ml: 0.2 }}>C°</Typography>
       </Box>
       <Box position="relative" display="flex" justifyContent="end" alignItems="center"> 
         <CheckLight
