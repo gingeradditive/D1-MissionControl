@@ -55,8 +55,8 @@ class DryerController:
         self.cooldown_active = False
         self.valve_is_open = False
         self.valve_last_switch_time = time.time()
-        self.hum_abs = 0; 
-        
+        self.hum_abs = 0
+
         self.errors = {}
 
         # DEMO VALUES
@@ -116,7 +116,7 @@ class DryerController:
                 GPIO.output(self.SSR_HEATER_GPIO, GPIO.LOW)
             self.ssr_heater = False
             print("Heater stopped.")
-            
+
             self.fan_cooldown_end = time.time() + self.fan_cooldown_duration
             self.cooldown_active = True
             self.valve_is_open = False
@@ -154,7 +154,8 @@ class DryerController:
         try:
             if IS_RASPBERRY:
                 sht40_temp, sht40_hum = self.sht.measurements
-                self.hum_abs = self.compute_absolute_humidity(sht40_temp, sht40_hum)
+                self.hum_abs = self.compute_absolute_humidity(
+                    sht40_temp, sht40_hum)
                 dew_point = self.compute_dew_point(sht40_temp, sht40_hum)
 
                 max6675_temp = 9999
@@ -174,7 +175,8 @@ class DryerController:
                 max6675_temp = self.prev_temp
                 sht40_temp = self.prev_temp + random.uniform(-1, 1)
                 self.hum_abs = self.prev_hum
-                dew_point = self.compute_dew_point(sht40_temp, (self.hum_abs / 30.0) * 100.0)
+                dew_point = self.compute_dew_point(
+                    sht40_temp, (self.hum_abs / 30.0) * 100.0)
 
                 if random.random() < 0.5:
                     raise OSError("Simulazione errore read_sensor")
@@ -186,7 +188,8 @@ class DryerController:
 
             now = datetime.now()
             self.history.append(
-                (now, max6675_temp, sht40_temp, dew_point, self.ssr_heater, self.ssr_fan, self.valve_is_open)
+                (now, max6675_temp, sht40_temp, dew_point,
+                 self.ssr_heater, self.ssr_fan, self.valve_is_open)
             )
 
             return now, max6675_temp, self.hum_abs, sht40_temp, dew_point
@@ -201,7 +204,6 @@ class DryerController:
                 self.errors[str(e)] = now
 
             return now, 999, 999, 999, 999
-
 
     def update_heater_pid_discrete(self, temp):
         if not self.dryer_status:
@@ -401,12 +403,12 @@ class DryerController:
                 print("Fan turned off after cooldown.")
 
     def set_angle(self, angle):
-        duty = (angle / 270.0) * 10 + 2.5
-        GPIO.output(self.SERVO_PIN, True)
+        # Mappatura: 0° → 2.5% duty | 270° → 12.5% duty (puoi calibrare se serve)
+        duty = (angle / 270.0) * 10.0 + 2.5
+
         self.pwm.ChangeDutyCycle(duty)
-        time.sleep(1)
-        GPIO.output(self.SERVO_PIN, False)
-        # self.pwm.ChangeDutyCycle(0)
+        time.sleep(1)   # tempo per raggiungere la posizione
+        self.pwm.ChangeDutyCycle(0)  # rilascio segnale → niente tremolio
 
     def valve_open(self):
         if IS_RASPBERRY:
