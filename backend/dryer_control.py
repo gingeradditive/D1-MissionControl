@@ -407,7 +407,7 @@ class DryerController:
         duty = (angle / 270.0) * 10.0 + 2.5
 
         self.pwm.ChangeDutyCycle(duty)
-        time.sleep(1)   # tempo per raggiungere la posizione
+        time.sleep(2)   # tempo per raggiungere la posizione
         self.pwm.ChangeDutyCycle(0)  # rilascio segnale → niente tremolio
 
     def valve_open(self):
