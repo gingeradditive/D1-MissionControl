@@ -407,19 +407,19 @@ class DryerController:
         duty = (angle / 270.0) * 10.0 + 2.5
 
         self.pwm.ChangeDutyCycle(duty)
-        time.sleep(2)   # tempo per raggiungere la posizione
+        time.sleep(10)   # tempo per raggiungere la posizione
         self.pwm.ChangeDutyCycle(0)  # rilascio segnale → niente tremolio
 
     def valve_open(self):
         if IS_RASPBERRY:
-            self.set_angle(90)
+            self.set_angle(100)
         else:
             print("Opening valve...")
         self.valve_is_open = True
 
     def valve_close(self):
         if IS_RASPBERRY:
-            self.set_angle(0)
+            self.set_angle(10)
         else:
             print("Closing valve...")
         self.valve_is_open = False
