@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from collections import deque
 import sys
 import math
-
+import threading
 from backend.config_control import ConfigController
 
 try:
@@ -21,6 +21,8 @@ except (ImportError, NotImplementedError):
 class DryerController:
 
     def __init__(self):
+        self.servo_lock = threading.Lock()
+
         # Config values
         self.configController = ConfigController()
         self.last_heater_action = time.time()
@@ -393,6 +395,7 @@ class DryerController:
         self.configController.set_config_param("setpoint", new_temp)
         print(f"Setpoint aggiornato a {new_temp}°C")
 
+
     def update_fan_cooldown(self):
         if self.cooldown_active and not self.dryer_status:
             if time.time() >= self.fan_cooldown_end:
@@ -402,13 +405,16 @@ class DryerController:
                 self.cooldown_active = False
                 print("Fan turned off after cooldown.")
 
-    def set_angle(self, angle):
-        # Mappatura: 0° → 2.5% duty | 270° → 12.5% duty (puoi calibrare se serve)
-        duty = (angle / 270.0) * 10.0 + 2.5
 
-        self.pwm.ChangeDutyCycle(duty)
-        time.sleep(1)   # tempo per raggiungere la posizione
-        self.pwm.ChangeDutyCycle(0)  # rilascio segnale → niente tremolio
+    def set_angle(self, angle):
+        duty = (angle / 270.0) * 10.0 + 2.5
+        with self.servo_lock:
+            self.pwm.ChangeDutyCycle(duty)
+            time.sleep(1)  # 2s è eccessivo, basta 0.3-0.5s per un servo standard
+            self.pwm.ChangeDutyCycle(0)
+
+        print(f"Valve {'OPEN' if self.valve_is_open else 'CLOSE'} triggered at {datetime.now()}")
+
 
     def valve_open(self):
         if IS_RASPBERRY:
