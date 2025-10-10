@@ -13,6 +13,7 @@ try:
     import spidev
     import time
     import RPi.GPIO as GPIO
+    import pigpio
     IS_RASPBERRY = True
 except (ImportError, NotImplementedError):
     IS_RASPBERRY = False
@@ -21,8 +22,6 @@ except (ImportError, NotImplementedError):
 class DryerController:
 
     def __init__(self):
-        self.servo_lock = threading.Lock()
-
         # Config values
         self.configController = ConfigController()
         self.last_heater_action = time.time()
@@ -85,10 +84,7 @@ class DryerController:
             GPIO.output(self.SSR_HEATER_GPIO, GPIO.LOW)
             GPIO.output(self.SSR_FAN_GPIO, GPIO.LOW)
 
-            GPIO.setup(self.SERVO_PIN, GPIO.OUT)
-
-            self.pwm = GPIO.PWM(self.SERVO_PIN, 50)
-            self.pwm.start(0)
+            self.pi = pigpio.pi()
 
             self.spi = spidev.SpiDev()
             self.spi.open(self.MAX6675BUS, self.MAX6675DEVICE)
@@ -407,13 +403,15 @@ class DryerController:
 
 
     def set_angle(self, angle):
-        duty = (angle / 270.0) * 10.0 + 2.5
-        with self.servo_lock:
-            self.pwm.ChangeDutyCycle(duty)
-            time.sleep(1)  # 2s è eccessivo, basta 0.3-0.5s per un servo standard
-            self.pwm.ChangeDutyCycle(0)
+        # Mappa 0–180° in microsecondi
+        pulse = int(500 + (angle / 180.0) * 2000)
+        self.pi.set_servo_pulsewidth(self.SERVO_PIN, pulse)
+        print(f"[DEBUG] set_angle({angle}) called at {datetime.now()} on thread {threading.current_thread().name}")
+        time.sleep(0.3)
+        
 
-        print(f"Valve {'OPEN' if self.valve_is_open else 'CLOSE'} triggered at {datetime.now()}")
+    def disable_servo(self):
+        self.pi.set_servo_pulsewidth(self.SERVO_PIN, 0)
 
 
     def valve_open(self):
