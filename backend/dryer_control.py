@@ -91,9 +91,16 @@ class DryerController:
             self.spi.max_speed_hz = 5000000
             self.spi.mode = 0b00
 
-            self.i2c = board.I2C()
-            self.sht = adafruit_sht4x.SHT4x(self.i2c)
-            self.sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
+            try:
+                self.i2c = board.I2C()
+                self.sht = adafruit_sht4x.SHT4x(self.i2c)
+                self.sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
+                self.sht_available = True
+            except Exception as e:
+                print(f"[ATTENZIONE] Sensore SHT4x non trovato sull'I2C: {e}")
+                self.sht = None
+                self.sht_available = False
+
 
     def start(self):
         if not self.dryer_status:
@@ -151,7 +158,11 @@ class DryerController:
     def read_sensor(self):
         try:
             if IS_RASPBERRY:
-                sht40_temp, sht40_hum = self.sht.measurements
+                if self.sht_available and self.sht is not None:
+                    sht40_temp, sht40_hum = self.sht.measurements
+                else:
+                    sht40_temp, sht40_hum = 0.0, 0.0  # valori nulli se sensore assente
+
                 self.hum_abs = self.compute_absolute_humidity(
                     sht40_temp, sht40_hum)
                 dew_point = self.compute_dew_point(sht40_temp, sht40_hum)
