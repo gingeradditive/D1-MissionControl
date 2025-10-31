@@ -144,16 +144,24 @@ class DryerController:
         ah = (2.1674 * p_vapor) / (273.15 + temp_c) * 1000
 
         return ah
+    
 
     def compute_dew_point(self, temp_c, rh_percent):
         # Calcolo del punto di rugiada usando la formula di Magnus-Tetens
         a = 17.27
         b = 237.7  # °C
 
-        alpha = ((a * temp_c) / (b + temp_c)) + math.log(rh_percent / 100.0)
-        dew_point = (b * alpha) / (a - alpha)
+        # Evita valori non validi
+        if rh_percent <= 0 or temp_c < -100 or temp_c > 150:
+            return 0.0
 
-        return dew_point
+        try:
+            alpha = ((a * temp_c) / (b + temp_c)) + math.log(rh_percent / 100.0)
+            dew_point = (b * alpha) / (a - alpha)
+            return dew_point
+        except Exception:
+            return 0.0
+
 
     def read_sensor(self):
         try:
