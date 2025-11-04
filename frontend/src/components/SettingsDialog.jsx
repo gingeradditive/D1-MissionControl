@@ -174,7 +174,7 @@ export default function SettingsDialog({
                     key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
                   return (
-                    <Grid item size={6} key={key}>
+                    <Grid item size={4} key={key}>
                       <TextField
                         label={label}
                         type="number"
