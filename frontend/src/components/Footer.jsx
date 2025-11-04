@@ -61,12 +61,12 @@ export default function Footer({ ext_hum, int_hum, dew_point, status, onStatusCh
         <Typography variant="caption" sx={{ fontSize: '0.6em', ml: 0.2 }}>ext</Typography>
         <Typography variant="h6" sx={{ ml: 0.5 }}>{ext_hum !== null ? `${ext_hum}%` : ""}</Typography>
         <Typography variant="h6" sx={{ color: "#cccccc", padding: "0px 10px" }}>/</Typography> */}
-        <WaterDropIcon fontSize="small" />
+        {/* <WaterDropIcon fontSize="small" />
         <Typography variant="h6" sx={{ ml: 0.5 }}>{int_hum !== null ? `${int_hum}` : "-"}</Typography>
         <Typography variant="caption" sx={{ fontSize: '0.9em', ml: 0.2 }}>mg/m³</Typography>
         <DewPointIcon fontSize="small" sx={{ ml: 2 }}/>
         <Typography variant="h6" sx={{ ml: 0.5 }}>{dew_point !== null ? `${dew_point}` : "-"}</Typography>
-        <Typography variant="caption" sx={{ fontSize: '0.9em', ml: 0.2 }}>C°</Typography>
+        <Typography variant="caption" sx={{ fontSize: '0.9em', ml: 0.2 }}>C°</Typography> */}
       </Box>
       <Box position="relative" display="flex" justifyContent="end" alignItems="center"> 
         <CheckLight

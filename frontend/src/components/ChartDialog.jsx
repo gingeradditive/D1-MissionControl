@@ -59,7 +59,7 @@ export default function ChartDialog({ open, onClose }) {
             <DialogTitle>
                 <Box display="flex" alignItems="center">
                     <AreaChartIcon sx={{ mr: 1 }} />
-                    Chart for Temperature & dew_point
+                    History
                 </Box>
             </DialogTitle>
             <DialogContent dividers>
@@ -79,12 +79,12 @@ export default function ChartDialog({ open, onClose }) {
                         aria-label="chart type"
                         sx={{ flexShrink: 0 }}
                     >
-                        <ToggleButton value="temperature" aria-label="temperature chart">
+                        {/* <ToggleButton value="temperature" aria-label="temperature chart">
                             Temperature
                         </ToggleButton>
                         <ToggleButton value="dew_point" aria-label="dew_point chart">
                             dew point
-                        </ToggleButton>
+                        </ToggleButton> */}
                     </ToggleButtonGroup>
 
                     <Box>
