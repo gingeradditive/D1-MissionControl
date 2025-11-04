@@ -113,9 +113,9 @@ export default function ChartDialog({ open, onClose }) {
                                 />
                                 <Tooltip />
                                 <Legend />
-                                <Line type="monotone" name="Average" dataKey="temperature" stroke="#ff5722" dot={false} isAnimationActive={false} />
-                                <Line type="monotone" name="Min" dataKey="tempMin" stroke="#ffccbc" strokeDasharray="5 5" dot={false} isAnimationActive={false} />
-                                <Line type="monotone" name="Max" dataKey="tempMax" stroke="#bf360c" strokeDasharray="5 5" dot={false} isAnimationActive={false} />
+                                <Line type="monotone" name="C°" dataKey="temperature" stroke="#ff5722" dot={false} isAnimationActive={false} />
+                                {/* <Line type="monotone" name="Min" dataKey="tempMin" stroke="#ffccbc" strokeDasharray="5 5" dot={false} isAnimationActive={false} />
+                                <Line type="monotone" name="Max" dataKey="tempMax" stroke="#bf360c" strokeDasharray="5 5" dot={false} isAnimationActive={false} /> */}
                             </LineChart>
                         </ResponsiveContainer>
                     </Box>
@@ -132,9 +132,9 @@ export default function ChartDialog({ open, onClose }) {
                                 />
                                 <Tooltip />
                                 <Legend />
-                                <Line type="monotone" name="Average" dataKey="dew_point" stroke="#2196f3" dot={false} isAnimationActive={false} />
-                                <Line type="monotone" name="Min" dataKey="humMin" stroke="#bbdefb" strokeDasharray="5 5" dot={false} isAnimationActive={false} />
-                                <Line type="monotone" name="Max" dataKey="humMax" stroke="#0d47a1" strokeDasharray="5 5" dot={false} isAnimationActive={false} />
+                                <Line type="monotone" name="--" dataKey="dew_point" stroke="#2196f3" dot={false} isAnimationActive={false} />
+                                {/* <Line type="monotone" name="Min" dataKey="humMin" stroke="#bbdefb" strokeDasharray="5 5" dot={false} isAnimationActive={false} />
+                                <Line type="monotone" name="Max" dataKey="humMax" stroke="#0d47a1" strokeDasharray="5 5" dot={false} isAnimationActive={false} /> */}
                             </LineChart>
                         </ResponsiveContainer>
                     </Box>
