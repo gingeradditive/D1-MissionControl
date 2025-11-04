@@ -145,7 +145,7 @@ export default function StatusManager() {
   }, [inactivityTimeout, isKiosk]);
 
   const handleIncrease = () => {
-    let newSet = Math.min(status.setpoint + 5, 100);
+    let newSet = Math.min(status.setpoint + 5, 70);
     api.setPoint(newSet);
     api.getStatus()
       .then(res => setStatus(res.data))
