@@ -7,10 +7,12 @@ export const useKeyboard = () => useContext(KeyboardContext);
 export function KeyboardProvider({ children }) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentValue, setCurrentValue] = useState('');
+  const [keyboardType, setKeyboardType] = useState('default');
   const [onSubmitCallback, setOnSubmitCallback] = useState(() => () => {});
 
-  const openKeyboard = (initialValue, onSubmit) => {
+  const openKeyboard = (initialValue = '', type = 'default', onSubmit = () => {}) => {
     setCurrentValue(initialValue);
+    setKeyboardType(type);
     setOnSubmitCallback(() => onSubmit);
     setIsOpen(true);
   };
@@ -25,7 +27,7 @@ export function KeyboardProvider({ children }) {
 
   return (
     <KeyboardContext.Provider value={{
-      isOpen, currentValue, openKeyboard, closeKeyboard,
+      isOpen, currentValue, keyboardType, openKeyboard, closeKeyboard,
       updateValue, onSubmitCallback
     }}>
       {children}

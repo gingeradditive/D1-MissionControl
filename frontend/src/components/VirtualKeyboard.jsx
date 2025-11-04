@@ -7,6 +7,7 @@ export default function VirtualKeyboard() {
   const {
     isOpen,
     currentValue,
+    keyboardType,
     updateValue,
     closeKeyboard,
     onSubmitCallback
@@ -15,6 +16,16 @@ export default function VirtualKeyboard() {
   const keyboardRef = useRef();
   const [localValue, setLocalValue] = useState(currentValue);
   const [layoutName, setLayoutName] = useState('default');
+
+  const numericLayout = {
+    default: [
+      '1 2 3',
+      '4 5 6',
+      '7 8 9',
+      '0 . {bksp}',
+      '{enter}'
+    ]
+  };
 
   // Layout modificato per Android style e pulito
   const androidStyleLayouts = {
@@ -56,7 +67,7 @@ export default function VirtualKeyboard() {
   const handleKeyPress = button => {
     if (button === '{enter}') {
       onSubmitCallback(localValue);
-      setTimeout(function() { closeKeyboard(); }, 200);
+      setTimeout(function () { closeKeyboard(); }, 200);
     }
 
     if (button === '{bksp}') {
@@ -133,7 +144,7 @@ export default function VirtualKeyboard() {
           onChange={handleChange}
           onKeyPress={handleKeyPress}
           layoutName={layoutName}
-          layout={androidStyleLayouts}
+          layout={keyboardType === 'numeric' ? numericLayout : androidStyleLayouts}
           display={{
             '{bksp}': '⌫',
             '{enter}': 'OK',

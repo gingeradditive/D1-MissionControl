@@ -196,8 +196,8 @@ export default function SettingsDialog({
                           inputProps: { min: 0, step: 0.1 }
                         }}
                         readOnly={isKiosk}
-                        onFocus={() => isKiosk && openKeyboard(value, val => handleConfigChange(key, Number(val)))}
-                        onClick={() => isKiosk && openKeyboard(value, val => handleConfigChange(key, Number(val)))}
+                        onFocus={() => isKiosk && openKeyboard(value, 'numeric', val => handleConfigChange(key, Number(val)))}
+                        onClick={() => isKiosk && openKeyboard(value, 'numeric', val => handleConfigChange(key, Number(val)))}
                       />
                     </Grid>
                   );
