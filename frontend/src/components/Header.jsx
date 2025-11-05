@@ -83,15 +83,15 @@ export default function Header() {
   ];
 
   const titlesMap = {
-    heater_pulse_duration: "Heater pulse duration (seconds)",
-    heater_kp: "Heater proportional gain (Kp)",
-    heater_ki: "Heater integral gain (Ki)",
-    heater_min_pause: "Heater minimum pause (seconds)",
-    heater_max_pause: "Heater maximum pause (seconds)",
-    fan_cooldown_duration: "Fan cooldown elapse (seconds)",
-    inactivity_timeout: "Screensaver timeout (minutes)",
-    valve_open_interval: "Valve opened interval (minute)",
-    valve_close_interval: "Valve closed interval (minute)",
+    heater_pulse_duration: "Heater pulse (s)",
+    heater_kp: "Heater gain Kp",
+    heater_ki: "Heater gain Ki",
+    heater_min_pause: "Heater min pause (s)",
+    heater_max_pause: "Heater max pause (s)",
+    fan_cooldown_duration: "Fan cooldown (s)",
+    inactivity_timeout: "Screensaver delay (min)",
+    valve_open_interval: "Air purge time (min)",
+    valve_close_interval: "Drying cycle time (min)",
   };
 
   return (
