@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, Typography, Box, Divider, CircularProgress,
-  TextField, Grid, DialogContentText
+  TextField, Grid, DialogContentText, MenuItem, Select, FormControl, InputLabel
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { api } from '../api';
@@ -27,6 +27,18 @@ export default function SettingsDialog({
   const [showConfirmUpdate, setShowConfirmUpdate] = useState(false);
   const [updating, setUpdating] = useState(false);
 
+  // 🕒 Timezone state
+  const [timezone, setTimezone] = useState("");
+  const [savingTz, setSavingTz] = useState(false);
+
+  // Lista timezone comuni
+  const timezones = [
+    "UTC", "Europe/Rome", "Europe/London", "Europe/Paris",
+    "America/New_York", "America/Los_Angeles",
+    "Asia/Tokyo", "Asia/Shanghai", "Asia/Dubai",
+    "Australia/Sydney"
+  ];
+
   useEffect(() => {
     if (open) {
       setLoading(true);
@@ -38,19 +50,22 @@ export default function SettingsDialog({
         .catch(() => {
           setSaveError('Failed to load configuration.');
         })
-        .finally(() => {
-          setLoading(false);
-        });
+        .finally(() => setLoading(false));
 
       api.getUpdateVersion()
         .then(res => setVersionInfo(res.data))
         .catch(() => setVersionInfo(null));
 
+      // 🕒 Carica timezone attuale
+      api.getTimezone()
+        .then(res => setTimezone(res.data.timezone))
+        .catch(() => setTimezone("UTC"));
+
       setUpdateStatus(null);
     }
   }, [open]);
 
-  // 🔧 Ogni modifica viene salvata immediatamente
+  // 🔧 Salvataggio immediato di config numerici
   const handleConfigChange = (key, value) => {
     const newValue = Number(value);
     setConfig(prev => ({ ...prev, [key]: newValue }));
@@ -60,6 +75,22 @@ export default function SettingsDialog({
       .catch(() => {
         setSaveError(`Failed to save "${key}".`);
       });
+  };
+
+  // 🕒 Cambia timezone
+  const handleTimezoneChange = (e) => {
+    const newTz = e.target.value;
+    setTimezone(newTz);
+    setSavingTz(true);
+
+    api.setTimezone(newTz)
+      .then(() => {
+        setUpdateStatus(`Timezone updated to ${newTz}`);
+      })
+      .catch(() => {
+        setSaveError("Failed to update timezone.");
+      })
+      .finally(() => setSavingTz(false));
   };
 
   const handleCheckUpdates = () => {
@@ -152,6 +183,25 @@ export default function SettingsDialog({
                   );
                 })}
             </Grid>
+
+            {/* --- 🕒 Timezone Selector --- */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" gutterBottom>Timezone</Typography>
+              <FormControl fullWidth size="small">
+                <InputLabel>Select Timezone</InputLabel>
+                <Select
+                  value={timezone}
+                  label="Select Timezone"
+                  onChange={handleTimezoneChange}
+                  disabled={savingTz}
+                >
+                  {timezones.map(tz => (
+                    <MenuItem key={tz} value={tz}>{tz}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {savingTz && <CircularProgress size={20} sx={{ mt: 1 }} />}
+            </Box>
 
             <Divider sx={{ my: 2 }} />
 

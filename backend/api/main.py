@@ -164,7 +164,6 @@ def apply_update():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
 @app.get("/config")
 def get_config():
     return config.get_all_config()
@@ -175,6 +174,7 @@ def set_config(key: str = Form(...), value: str = Form(...)):
     config.set_config_param(key, value)
     return {"status": "Success", "message": "Updated configuration"}
 
+
 @app.get("/config/reload")
 def reload_config():
     global dryer, network, update
@@ -184,9 +184,37 @@ def reload_config():
     print("Configurazioni ricaricate")
     return {"status": "Success", "message": "Controllers reloaded"}
 
+
 @app.get("/config/{key}")
 def get_config_by_key(key: str):
     return config.get_config_param(key, None)
+
+
+@app.post("/config/timezone")
+def set_timezone(timezone: str = Form(...)):
+    """
+    Imposta il timezone del sistema (es. 'Europe/Rome').
+    """
+    try:
+        config.set_timezone(timezone)
+        current = config.get_timezone()
+        return {"status": "Success", "message": f"Timezone impostato su {current}"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Errore nell'impostare il timezone: {e}")
+
+
+@app.get("/config/timezone")
+def get_timezone():
+    """
+    Ritorna il timezone attualmente impostato sul sistema.
+    """
+    try:
+        current = config.get_timezone()
+        return {"timezone": current}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Errore nel recupero del timezone: {e}")
 
 
 @app.on_event("shutdown")
