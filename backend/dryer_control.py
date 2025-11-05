@@ -101,7 +101,6 @@ class DryerController:
                 self.sht = None
                 self.sht_available = False
 
-
     def start(self):
         if not self.dryer_status:
             self.dryer_status = True
@@ -144,7 +143,6 @@ class DryerController:
         ah = (2.1674 * p_vapor) / (273.15 + temp_c) * 1000
 
         return ah
-    
 
     def compute_dew_point(self, temp_c, rh_percent):
         # Calcolo del punto di rugiada usando la formula di Magnus-Tetens
@@ -156,12 +154,12 @@ class DryerController:
             return 0.0
 
         try:
-            alpha = ((a * temp_c) / (b + temp_c)) + math.log(rh_percent / 100.0)
+            alpha = ((a * temp_c) / (b + temp_c)) + \
+                math.log(rh_percent / 100.0)
             dew_point = (b * alpha) / (a - alpha)
             return dew_point
         except Exception:
             return 0.0
-
 
     def read_sensor(self):
         try:
@@ -240,15 +238,23 @@ class DryerController:
             (self.Kp * error + self.Ki * self.integral_error)
         pause_duration = max(self.min_pause, min(self.max_pause, raw_pause))
 
-        # Accendi solo se spento da abbastanza tempo e serve calore
-        if error > self.tolerance and not self.ssr_heater:
+        # Accendi solo se serve calore, la valvola è chiusa e spento da abbastanza tempo
+        if error > self.tolerance and not self.ssr_heater and not self.valve_is_open:
             if now - self.last_heater_action >= pause_duration:
                 if IS_RASPBERRY:
                     GPIO.output(self.SSR_HEATER_GPIO, GPIO.HIGH)
                 self.ssr_heater = True
                 self.last_heater_action = now
                 print(
-                    f"[+{error:.2f}°C] Heater ON per {self.heater_pulse_duration}s (pause: {pause_duration:.1f}s)")
+                    f"[+{error:.2f}°C] Heater ON per {self.heater_pulse_duration}s (pause: {pause_duration:.1f}s)"
+                )
+        elif self.valve_is_open and self.ssr_heater:
+            # Se la valvola si apre, spegni subito l’heater per sicurezza
+            if IS_RASPBERRY:
+                GPIO.output(self.SSR_HEATER_GPIO, GPIO.LOW)
+            self.ssr_heater = False
+            self.last_heater_action = now
+            print("Heater OFF (valve opened)")
 
         # Spegni dopo X secondi
         elif self.ssr_heater and now - self.last_heater_action >= self.heater_pulse_duration:
@@ -410,7 +416,6 @@ class DryerController:
         self.configController.set_config_param("setpoint", new_temp)
         print(f"Setpoint aggiornato a {new_temp}°C")
 
-
     def update_fan_cooldown(self):
         if self.cooldown_active and not self.dryer_status:
             if time.time() >= self.fan_cooldown_end:
@@ -420,18 +425,16 @@ class DryerController:
                 self.cooldown_active = False
                 print("Fan turned off after cooldown.")
 
-
     def set_angle(self, angle):
         # Mappa 0–180° in microsecondi
         pulse = int(500 + (angle / 180.0) * 2000)
         self.pi.set_servo_pulsewidth(self.SERVO_PIN, pulse)
-        print(f"[DEBUG] set_angle({angle}) called at {datetime.now()} on thread {threading.current_thread().name}")
+        print(
+            f"[DEBUG] set_angle({angle}) called at {datetime.now()} on thread {threading.current_thread().name}")
         time.sleep(0.3)
-        
 
     def disable_servo(self):
         self.pi.set_servo_pulsewidth(self.SERVO_PIN, 0)
-
 
     def valve_open(self):
         if IS_RASPBERRY:
