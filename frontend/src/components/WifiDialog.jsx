@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, List, ListItem, ListItemButton,
   ListItemIcon, ListItemText, Typography, Button, Box, DialogActions,
-  IconButton
+  IconButton, CircularProgress
 } from '@mui/material';
 import WifiIcon from '@mui/icons-material/Wifi';
 import SignalWifi0Bar from '@mui/icons-material/SignalWifi0Bar';
@@ -29,19 +29,34 @@ export default function WifiListDialog({ open, onClose }) {
   const [wifiList, setWifiList] = useState([]);
   const [connectedNetwork, setConnectedNetwork] = useState(null);
   const [selectedNetwork, setSelectedNetwork] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // funzione per aggiornare la lista WiFi
+  const fetchWifiData = async () => {
+    try {
+      setLoading(true);
+      const [statusRes, listRes] = await Promise.all([
+        api.getConnectionStatus(),
+        api.getConnection()
+      ]);
+
+      setConnectedNetwork(statusRes.data);
+      const sorted = listRes.data.sort((a, b) => b.strength - a.strength);
+      setWifiList(sorted);
+    } catch (err) {
+      console.error("Error loading networks:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (open) {
-      api.getConnectionStatus()
-        .then(res => setConnectedNetwork(res.data))
-        .catch(err => console.error("Error fetching status:", err));
+      fetchWifiData();
 
-      api.getConnection()
-        .then(res => {
-          const sorted = res.data.sort((a, b) => b.strength - a.strength);
-          setWifiList(sorted);
-        })
-        .catch(err => console.error("Error loading networks:", err));
+      // refresh automatico ogni 10 secondi
+      const interval = setInterval(fetchWifiData, 10000);
+      return () => clearInterval(interval);
     }
   }, [open]);
 
@@ -49,6 +64,7 @@ export default function WifiListDialog({ open, onClose }) {
     try {
       await api.setConnectionForget();
       setConnectedNetwork(null);
+      fetchWifiData(); // aggiorna lista dopo il forget
     } catch (err) {
       console.error("Error forgetting network:", err);
     }
@@ -63,54 +79,70 @@ export default function WifiListDialog({ open, onClose }) {
             Available WiFi Networks
           </Box>
         </DialogTitle>
+
         <DialogContent dividers>
-          <List>
-            {wifiList.map((network) => {
-              const isConnected = connectedNetwork?.ssid === network.ssid;
-              return (
-                <ListItem key={network.ssid} disablePadding secondaryAction={
-                  isConnected && (
-                    <IconButton onClick={() => handleForget()} color="error">
-                      <DeleteIcon />
-                    </IconButton>
-                  )
-                }>
-                  <ListItemButton
-                    onClick={() => setSelectedNetwork(network)}
-                    selected={selectedNetwork?.ssid === network.ssid}
+          {loading ? (
+            <Box display="flex" justifyContent="center" alignItems="center" py={4}>
+              <CircularProgress />
+            </Box>
+          ) : wifiList.length === 0 ? (
+            <Typography align="center" color="text.secondary" py={3}>
+              No networks found
+            </Typography>
+          ) : (
+            <List>
+              {wifiList.map((network) => {
+                const isConnected = connectedNetwork?.ssid === network.ssid;
+                return (
+                  <ListItem
+                    key={network.ssid}
+                    disablePadding
+                    secondaryAction={
+                      isConnected && (
+                        <IconButton onClick={() => handleForget()} color="error">
+                          <DeleteIcon />
+                        </IconButton>
+                      )
+                    }
                   >
-                    <ListItemIcon>{getWifiIcon(network.strength)}</ListItemIcon>
-                    <ListItemText
-                      primary={
-                        <Box display="flex" flexDirection="column">
-                          <Typography variant="body1">{network.ssid}</Typography>
-                          {isConnected && (
-                            <Typography variant="caption" color="primary">
-                              Connected: {connectedNetwork?.ip}
-                            </Typography>
-                          )}
-                        </Box>
-                      }
-                    />
-                  </ListItemButton>
-                </ListItem>
-              );
-            })}
-          </List>
+                    <ListItemButton
+                      onClick={() => setSelectedNetwork(network)}
+                      selected={selectedNetwork?.ssid === network.ssid}
+                    >
+                      <ListItemIcon>{getWifiIcon(network.strength)}</ListItemIcon>
+                      <ListItemText
+                        primary={
+                          <Box display="flex" flexDirection="column">
+                            <Typography variant="body1">{network.ssid}</Typography>
+                            {isConnected && (
+                              <Typography variant="caption" color="primary">
+                                Connected: {connectedNetwork?.ip}
+                              </Typography>
+                            )}
+                          </Box>
+                        }
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                );
+              })}
+            </List>
+          )}
         </DialogContent>
+
         <DialogActions>
+          <Button onClick={fetchWifiData}>Refresh</Button>
           <Button onClick={onClose}>Close</Button>
         </DialogActions>
       </Dialog>
 
-      {/* Modal di connessione */}
       {selectedNetwork && (
         <WifiConnectDialog
           network={selectedNetwork}
           onClose={() => setSelectedNetwork(null)}
           onSuccess={() => {
             setSelectedNetwork(null);
-            onClose(); // chiude entrambi i modali
+            fetchWifiData();
           }}
         />
       )}

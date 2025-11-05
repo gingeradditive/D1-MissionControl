@@ -1,12 +1,12 @@
 import subprocess
 import socket
 import requests
-
 try:
     import board
     import RPi.GPIO as GPIO
     IS_RASPBERRY = True
 except (ImportError, NotImplementedError):
+    import time
     IS_RASPBERRY = False
 
 
@@ -36,12 +36,18 @@ class NetworkController:
                 print(f"Errore nel recupero delle reti Wi-Fi: {e}")
                 return []
         else:
+            # 🕐 Simulazione di una scansione lenta (10 secondi)
+            print("Simulazione: scansione Wi-Fi lenta (10s)...")
+            time.sleep(10)
+
             # Dati di mock
-            return [
+            mock_networks = [
                 {"ssid": "Home_WiFi", "strength": 65},
                 {"ssid": "Office_Net", "strength": 80},
                 {"ssid": "Cafe_Free_WiFi", "strength": 40}
             ]
+            self.networks = mock_networks
+            return mock_networks
         
 
     def connect_to_network(self, ssid: str, password: str):
