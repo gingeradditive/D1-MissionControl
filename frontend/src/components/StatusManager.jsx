@@ -133,7 +133,7 @@ export default function StatusManager() {
     events.forEach(e => window.addEventListener(e, resetTimer));
 
     const interval = setInterval(() => {
-      if (Date.now() - lastInteractionTime.current > inactivityTimeout * 1000) {
+      if (Date.now() - lastInteractionTime.current > inactivityTimeout * 1000 * 60) {
         setIsScreensaverActive(true);
       }
     }, 1000);

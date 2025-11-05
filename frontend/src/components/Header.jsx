@@ -89,9 +89,9 @@ export default function Header() {
     heater_min_pause: "Heater minimum pause (seconds)",
     heater_max_pause: "Heater maximum pause (seconds)",
     fan_cooldown_duration: "Fan cooldown elapse (seconds)",
-    inactivity_timeout: "Screensaver timeout (seconds)",
-    valve_open_interval: "Valve opened interval (seconds)",
-    valve_close_interval: "Valve closed interval (seconds)",
+    inactivity_timeout: "Screensaver timeout (minutes)",
+    valve_open_interval: "Valve opened interval (minute)",
+    valve_close_interval: "Valve closed interval (minute)",
   };
 
   return (

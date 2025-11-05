@@ -39,9 +39,9 @@ class DryerController:
         self.fan_cooldown_duration = self.configController.get_config_param(
             "fan_cooldown_duration", 120, int)
         self.valve_open_interval = self.configController.get_config_param(
-            "valve_open_interval", 900, int)
+            "valve_open_interval", 15, int)
         self.valve_close_interval = self.configController.get_config_param(
-            "valve_close_interval", 300, int)
+            "valve_close_interval", 5, int)
 
         # System Vars
         self.integral_error = 0.0
@@ -455,10 +455,10 @@ class DryerController:
             now = time.time()
 
             if self.valve_is_open:
-                if now - self.valve_last_switch_time >= self.valve_open_interval:
+                if now - self.valve_last_switch_time >= self.valve_open_interval * 60:
                     self.valve_close()
                     self.valve_last_switch_time = now
             else:
-                if now - self.valve_last_switch_time >= self.valve_close_interval:
+                if now - self.valve_last_switch_time >= self.valve_close_interval * 60:
                     self.valve_open()
                     self.valve_last_switch_time = now
