@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, Typography, Box, Divider, CircularProgress,
-  TextField, IconButton, Grid, DialogContentText
+  TextField, Grid, DialogContentText
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
-import UpdateIcon from '@mui/icons-material/SystemUpdateAlt';
-import ReplayIcon from '@mui/icons-material/Replay';
 import { api } from '../api';
 import { useKeyboard } from '../KeyboardContext';
 
@@ -20,9 +18,7 @@ export default function SettingsDialog({
   const { openKeyboard } = useKeyboard();
 
   const [config, setConfig] = useState(null);
-  const [originalConfig, setOriginalConfig] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
 
   const [checking, setChecking] = useState(false);
@@ -37,7 +33,6 @@ export default function SettingsDialog({
       api.getConfigurations()
         .then(response => {
           setConfig(response.data);
-          setOriginalConfig(response.data);
           setSaveError(null);
         })
         .catch(() => {
@@ -48,54 +43,23 @@ export default function SettingsDialog({
         });
 
       api.getUpdateVersion()
-        .then(res => {
-          setVersionInfo(res.data);
-        })
-        .catch(() => {
-          setVersionInfo(null);
-        });
+        .then(res => setVersionInfo(res.data))
+        .catch(() => setVersionInfo(null));
 
       setUpdateStatus(null);
     }
   }, [open]);
 
+  // 🔧 Ogni modifica viene salvata immediatamente
   const handleConfigChange = (key, value) => {
-    setConfig(prev => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
+    const newValue = Number(value);
+    setConfig(prev => ({ ...prev, [key]: newValue }));
 
-  const handleResetField = (key) => {
-    setConfig(prev => ({
-      ...prev,
-      [key]: originalConfig[key],
-    }));
-  };
-
-  const handleSave = () => {
-    if (!config) return;
-    setSaving(true);
-    setSaveError(null);
-
-    const keysToUpdate = Object.keys(config).filter(
-      key => config[key] !== originalConfig[key]
-    );
-
-    Promise.all(
-      keysToUpdate.map(key => api.setConfiguration(key, config[key]))
-    )
-      .then(() => {
-        return api.reloadConfigurations();
-      })
-      .then(() => {
-        setOriginalConfig(config);
-        window.location.reload();
-      })
+    api.setConfiguration(key, newValue)
+      .then(() => api.reloadConfigurations())
       .catch(() => {
-        setSaveError('Failed to save configuration.');
-      })
-      .finally(() => setSaving(false));
+        setSaveError(`Failed to save "${key}".`);
+      });
   };
 
   const handleCheckUpdates = () => {
@@ -112,8 +76,7 @@ export default function SettingsDialog({
           setUpdateStatus("You have the latest version.");
         }
       })
-      .catch(error => {
-        console.error('Error checking for updates:', error);
+      .catch(() => {
         setChecking(false);
         setUpdateStatus("Failed to check for updates.");
       });
@@ -146,16 +109,15 @@ export default function SettingsDialog({
           Settings
         </Box>
       </DialogTitle>
+
       <DialogContent
         dividers
         sx={{
-          // Aumenta la larghezza delle scrollbar solo in modalità kiosk
           '&::-webkit-scrollbar': isKiosk ? { width: '24px', height: '24px' } : {},
           '&::-webkit-scrollbar-thumb': isKiosk ? { backgroundColor: '#888', borderRadius: '4px' } : {},
           '&::-webkit-scrollbar-track': isKiosk ? { backgroundColor: '#f1f1f1', borderRadius: '4px' } : {},
         }}
       >
-
         {loading && <CircularProgress />}
         {saveError && (
           <Typography color="error" mb={2}>
@@ -169,50 +131,27 @@ export default function SettingsDialog({
               {Object.entries(config)
                 .filter(([key]) => !keysToShow || keysToShow.includes(key))
                 .map(([key, value]) => {
-                  const isModified = originalConfig[key] !== config[key];
                   const label = titlesMap[key] ||
                     key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
                   return (
-                    <Grid item size={4} key={key}>
+                    <Grid item xs={4} key={key}>
                       <TextField
                         label={label}
                         type="number"
                         value={value}
-                        onChange={e => !isKiosk && handleConfigChange(key, Number(e.target.value))}
+                        onChange={e => !isKiosk && handleConfigChange(key, e.target.value)}
                         size="small"
                         fullWidth
-                        InputProps={{
-                          endAdornment: isModified && (
-                            <IconButton
-                              edge="end"
-                              size="small"
-                              onClick={() => handleResetField(key)}
-                              title="Reset to original"
-                            >
-                              <ReplayIcon />
-                            </IconButton>
-                          ),
-                          inputProps: { min: 0, step: 0.1 }
-                        }}
+                        InputProps={{ inputProps: { min: 0, step: 0.1 } }}
                         readOnly={isKiosk}
-                        onFocus={() => isKiosk && openKeyboard(value, 'numeric', val => handleConfigChange(key, Number(val)))}
-                        onClick={() => isKiosk && openKeyboard(value, 'numeric', val => handleConfigChange(key, Number(val)))}
+                        onFocus={() => isKiosk && openKeyboard(value, 'numeric', val => handleConfigChange(key, val))}
+                        onClick={() => isKiosk && openKeyboard(value, 'numeric', val => handleConfigChange(key, val))}
                       />
                     </Grid>
                   );
                 })}
             </Grid>
-
-            <Box display="flex" justifyContent="flex-start" gap={1}>
-              <Button
-                variant="contained"
-                onClick={handleSave}
-                disabled={saving || JSON.stringify(config) === JSON.stringify(originalConfig)}
-              >
-                {saving ? <CircularProgress size={20} /> : "Save"}
-              </Button>
-            </Box>
 
             <Divider sx={{ my: 2 }} />
 
@@ -244,6 +183,7 @@ export default function SettingsDialog({
           </>
         )}
       </DialogContent>
+
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
       </DialogActions>
