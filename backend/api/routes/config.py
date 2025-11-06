@@ -17,7 +17,10 @@ def set_config(key: str = Form(...), value: str = Form(...)):
 @router.get("/reload")
 def reload_config():
     from backend.core.state import controllers
-    controllers["dryer"] = controllers["dryer"].__class__()
+
+    config = controllers["config"]
+
+    controllers["dryer"] = controllers["dryer"].__class__(config)
     controllers["network"] = controllers["network"].__class__()
     controllers["update"] = controllers["update"].__class__(".")
     return {"status": "Success", "message": "Controllers reloaded"}
