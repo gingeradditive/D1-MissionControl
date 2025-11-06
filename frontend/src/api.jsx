@@ -34,6 +34,9 @@ export const api = {
   reloadConfigurations: () => apiClient.get("/config/reload"),
   getConfiguration: (key) => apiClient.get(`/config/${key}`),
 
+  /** 🔄 Factory Reset Config */
+  resetConfigurations: () => apiClient.post("/config/reset"),
+
   // --- Update ---
   getUpdateVersion: () => apiClient.get("/update/version"),
   getUpdateCheck: () => apiClient.get("/update/check"),

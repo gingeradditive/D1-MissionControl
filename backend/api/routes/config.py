@@ -43,3 +43,11 @@ def get_timezone():
         return {"timezone": system.get_timezone()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/reset")
+def factory_reset():
+    try:
+        config.reset()
+        return {"status": "Success", "message": "Configuration reset to factory defaults"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Factory reset failed: {e}")

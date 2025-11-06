@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, Typography, Box, Divider, CircularProgress,
-  TextField, Grid, DialogContentText, Autocomplete 
+  TextField, Grid, DialogContentText, Autocomplete
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { api } from '../api';
@@ -30,6 +30,30 @@ export default function SettingsDialog({
   // 🕒 Timezone state
   const [timezone, setTimezone] = useState("");
   const [savingTz, setSavingTz] = useState(false);
+
+  // ⚙️ Factory Reset
+  const [showConfirmReset, setShowConfirmReset] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  const handleFactoryReset = () => {
+    setResetting(true);
+    api.resetConfigurations()
+      .then(() => {
+        setUpdateStatus("Configuration reset to factory defaults.");
+        // Ricarica i dati per aggiornare l'interfaccia
+        return api.getConfigurations();
+      })
+      .then((res) => {
+        setConfig(res.data);
+      })
+      .catch(() => {
+        setSaveError("Failed to reset configuration.");
+      })
+      .finally(() => {
+        setResetting(false);
+        setShowConfirmReset(false);
+      });
+  };
 
   // Lista timezone comuni
   const timezones = Intl.supportedValuesOf('timeZone');
@@ -240,8 +264,18 @@ export default function SettingsDialog({
       </DialogContent>
 
       <DialogActions>
+        <Button
+          color="error"
+          onClick={() => setShowConfirmReset(true)}
+        >
+          Factory Reset
+        </Button>
+
+        <Box flexGrow={1} />
+
         <Button onClick={onClose}>Close</Button>
       </DialogActions>
+
 
       {/* Confirm Update Dialog */}
       <Dialog open={showConfirmUpdate} onClose={() => setShowConfirmUpdate(false)}>
@@ -255,6 +289,28 @@ export default function SettingsDialog({
           <Button onClick={() => setShowConfirmUpdate(false)}>Cancel</Button>
           <Button onClick={handleApplyUpdate} disabled={updating} variant="contained" color="primary">
             {updating ? <CircularProgress size={20} /> : "Apply Update"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Confirm Factory Reset Dialog */}
+      <Dialog open={showConfirmReset} onClose={() => setShowConfirmReset(false)}>
+        <DialogTitle>Confirm Factory Reset</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            This will erase all configuration data and restore defaults.
+            Are you sure you want to continue?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowConfirmReset(false)}>Cancel</Button>
+          <Button
+            onClick={handleFactoryReset}
+            disabled={resetting}
+            variant="contained"
+            color="error"
+          >
+            {resetting ? <CircularProgress size={20} /> : "Reset"}
           </Button>
         </DialogActions>
       </Dialog>

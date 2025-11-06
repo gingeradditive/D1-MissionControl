@@ -5,26 +5,49 @@ from typing import TypeVar, Type, Any
 CONFIG_FILE = "config.json"
 T = TypeVar("T")
 
+DEFAULT_CONFIG = {
+    "heater_pulse_duration": 10,
+    "heater_kp": 5.0,
+    "heater_ki": 0.1,
+    "heater_min_pause": 5,
+    "heater_max_pause": 60,
+    "setpoint": 70,
+    "fan_cooldown_duration": 120,
+    "valve_open_interval": 15,
+    "valve_close_interval": 5,
+    "inactivity_timeout": 5,
+}
+
 
 class FileConfig:
     """Gestione del file config.json"""
 
-    def __init__(self, path: str = CONFIG_FILE):
+    def __init__(self, path: str = CONFIG_FILE, defaults: dict[str, Any] = None):
         self.path = path
-        # Crea il file se non esiste
+        self.defaults = defaults or DEFAULT_CONFIG
+        # Se non esiste, crea il file con i valori di default
         if not os.path.exists(self.path):
-            with open(self.path, "w") as f:
-                json.dump({}, f, indent=4)
+            self._write(self.defaults)
 
     def _read(self) -> dict[str, Any]:
         try:
             with open(self.path, "r") as f:
-                return json.load(f)
+                data = json.load(f)
+            # Integra eventuali chiavi mancanti con i default
+            updated = False
+            for key, val in self.defaults.items():
+                if key not in data:
+                    data[key] = val
+                    updated = True
+            if updated:
+                self._write(data)
+            return data
         except (json.JSONDecodeError, FileNotFoundError):
-            return {}
+            self._write(self.defaults)
+            return dict(self.defaults)
         except Exception as e:
             print(f"[Config] Errore nel leggere {self.path}: {e}")
-            return {}
+            return dict(self.defaults)
 
     def _write(self, data: dict[str, Any]) -> None:
         try:
@@ -39,7 +62,6 @@ class FileConfig:
             data[key] = default
             self._write(data)
             return default
-
         value = data[key]
         try:
             return cast_type(value)
@@ -54,3 +76,13 @@ class FileConfig:
 
     def all(self) -> dict[str, Any]:
         return self._read()
+
+    def reset(self) -> None:
+        """Elimina il file di configurazione e lo ricrea con i valori di default."""
+        try:
+            if os.path.exists(self.path):
+                os.remove(self.path)
+            self._write(self.defaults)
+            print(f"[Config] {self.path} è stato resettato ai valori di default.")
+        except Exception as e:
+            print(f"[Config] Errore nel reset del file {self.path}: {e}")
