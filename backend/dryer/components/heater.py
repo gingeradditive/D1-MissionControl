@@ -1,0 +1,35 @@
+# backend/dryer/components/heater.py
+from pathlib import Path
+from typing import Optional
+
+try:
+    import RPi.GPIO as GPIO
+    IS_RASPBERRY = True
+except (ImportError, NotImplementedError):
+    IS_RASPBERRY = False
+
+class Heater:
+    def __init__(self, gpio_pin: int = 23):
+        self.gpio_pin = gpio_pin
+        self._is_on = False
+        if IS_RASPBERRY:
+            GPIO.setmode(GPIO.BCM)
+            GPIO.setup(self.gpio_pin, GPIO.OUT)
+            GPIO.output(self.gpio_pin, GPIO.LOW)
+
+    def on(self):
+        if IS_RASPBERRY:
+            GPIO.output(self.gpio_pin, GPIO.HIGH)
+        self._is_on = True
+
+    def off(self):
+        if IS_RASPBERRY:
+            GPIO.output(self.gpio_pin, GPIO.LOW)
+        self._is_on = False
+
+    def is_on(self) -> bool:
+        return self._is_on
+
+    def cleanup(self):
+        # nothing special, controller will cleanup GPIO
+        pass

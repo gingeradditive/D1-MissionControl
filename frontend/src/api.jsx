@@ -11,25 +11,26 @@ const apiClient = axios.create({
 
 export const api = {
   // --- Dryer ---
-  getStatus: () => apiClient.get("/status"),
-  setStatus: (status) => apiClient.post(`/status/${status}`),
-  getHistory: (mode) => apiClient.get(`/history`, { params: { mode } }),
-  setPoint: (value) => apiClient.post(`/setpoint/${value}`),
+  getStatus: () => apiClient.get("/dryer/status"),
+  setStatus: (status) => apiClient.post(`/dryer/status/${status}`),
+  getHistory: (mode) => apiClient.get("/dryer/history", { params: { mode } }),
+  setPoint: (value) => apiClient.post(`/dryer/setpoint/${value}`),
 
   // --- Network ---
-  getConnection: () => apiClient.get("/connection"),
-  setConnection: (ssid, password) => apiClient.post(`/connection/${ssid}/${password}`),
-  getConnectionStatus: () => apiClient.get("/connection/status"),
-  getconnectionG1OS: () => apiClient.get("/connection/g1os"),
-  setConnectionForget: () => apiClient.post(`/connection/forget`),
+  getConnection: () => apiClient.get("/network"),
+  setConnection: (ssid, password) => apiClient.post(`/network/${ssid}/${password}`),
+  getConnectionStatus: () => apiClient.get("/network/status"),
+  getconnectionG1OS: () => apiClient.get("/network/g1os"),
+  setConnectionForget: () => apiClient.post("/network/forget"),
 
   // --- Configuration ---
   getConfigurations: () => apiClient.get("/config"),
-  setConfiguration: (key, value) => apiClient.post(
-    "/config/set",
-    new URLSearchParams({ key, value }).toString(),
-    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-  ),
+  setConfiguration: (key, value) =>
+    apiClient.post(
+      "/config/set",
+      new URLSearchParams({ key, value }).toString(),
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+    ),
   reloadConfigurations: () => apiClient.get("/config/reload"),
   getConfiguration: (key) => apiClient.get(`/config/${key}`),
 

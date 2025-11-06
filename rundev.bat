@@ -9,7 +9,7 @@ IF EXIST venv (
 
 REM Avvia il backend in una nuova finestra
 echo Avvio backend...
-start cmd /k "python3 -m uvicorn backend.api.main:app --reload"
+start cmd /k "python3 -m uvicorn backend.main:app --reload"
 
 REM Avvia il frontend React con Vite in una nuova finestra
 echo Avvio frontend React...

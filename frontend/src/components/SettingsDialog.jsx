@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, Typography, Box, Divider, CircularProgress,
-  TextField, Grid, DialogContentText, MenuItem, Select, FormControl, InputLabel
+  TextField, Grid, DialogContentText, Autocomplete 
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { api } from '../api';
@@ -32,12 +32,7 @@ export default function SettingsDialog({
   const [savingTz, setSavingTz] = useState(false);
 
   // Lista timezone comuni
-  const timezones = [
-    "UTC", "Europe/Rome", "Europe/London", "Europe/Paris",
-    "America/New_York", "America/Los_Angeles",
-    "Asia/Tokyo", "Asia/Shanghai", "Asia/Dubai",
-    "Australia/Sydney"
-  ];
+  const timezones = Intl.supportedValuesOf('timeZone');
 
   useEffect(() => {
     if (open) {
@@ -184,23 +179,33 @@ export default function SettingsDialog({
                 })}
             </Grid>
 
-            {/* --- 🕒 Timezone Selector --- */}
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom>Timezone</Typography>
-              <FormControl fullWidth size="small">
-                <InputLabel>Select Timezone</InputLabel>
-                <Select
-                  value={timezone}
-                  label="Select Timezone"
-                  onChange={handleTimezoneChange}
-                  disabled={savingTz}
-                >
-                  {timezones.map(tz => (
-                    <MenuItem key={tz} value={tz}>{tz}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              {savingTz && <CircularProgress size={20} sx={{ mt: 1 }} />}
+
+              <Autocomplete
+                options={timezones}
+                value={timezone}
+                onChange={(e, newValue) => {
+                  if (newValue) handleTimezoneChange({ target: { value: newValue } });
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Timezone"
+                    size="small"
+                    fullWidth
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {savingTz ? <CircularProgress size={20} /> : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+              />
             </Box>
 
             <Divider sx={{ my: 2 }} />
