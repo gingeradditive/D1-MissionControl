@@ -101,7 +101,7 @@ After=network.target
 [Service]
 User=$USERNAME
 WorkingDirectory=$PROJECT_DIR
-ExecStart=$PROJECT_DIR/venv/bin/python3 -m uvicorn backend.api.main:app --host 0.0.0.0 --port 8000
+ExecStart=$PROJECT_DIR/venv/bin/python3 -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
 Restart=always
 
 [Install]
