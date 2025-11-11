@@ -1,6 +1,7 @@
 #!/bin/bash
-
 set -e
+
+export DEBIAN_FRONTEND=noninteractive
 
 echo "=== 🛠️ INSTALLAZIONE SISTEMA KIOSK ==="
 
@@ -8,8 +9,9 @@ PROJECT_DIR=$(pwd)
 USERNAME=$(whoami)
 
 echo "📦 Aggiorno sistema e installo pacchetti base..."
-sudo apt update && sudo apt upgrade -y
-sudo apt install --no-install-recommends -y \
+sudo apt-get update -y
+sudo apt-get upgrade -y
+sudo apt-get install --no-install-recommends -y \
     xserver-xorg \
     x11-xserver-utils \
     xinit \
@@ -18,10 +20,11 @@ sudo apt install --no-install-recommends -y \
     python3-venv \
     python3-pip \
     npm \
-    git
+    git \
+    curl
 
 echo "📦 Aggiorno Node..."
-sudo apt-get remove nodejs
+sudo apt-get remove -y nodejs || true
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
@@ -31,22 +34,33 @@ source venv/bin/activate
 
 echo "📦 Installo dipendenze Python da requirements.txt..."
 pip install --upgrade pip
-pip install -r requirements.txt
+if [ -f "requirements.txt" ]; then
+    pip install -r requirements.txt
+else
+    echo "⚠️ Nessun requirements.txt trovato, salto installazione pacchetti Python."
+fi
 
 echo "📦 Installo dipendenze npm per il frontend..."
-cd "$PROJECT_DIR/frontend"
-npm install
-npm run build
+if [ -d "$PROJECT_DIR/frontend" ]; then
+    cd "$PROJECT_DIR/frontend"
+    npm install --no-audit --no-fund
+    if npm run | grep -q "build"; then
+        npm run build
+    else
+        echo "⚠️ Nessuno script build trovato in package.json."
+    fi
+    cd "$PROJECT_DIR"
+else
+    echo "⚠️ Cartella frontend non trovata, salto build."
+fi
 
 echo "📦 Installo globalmente il server statico serve..."
 sudo npm install -g serve
-cd "$PROJECT_DIR"
 
 echo "🚀 Creo servizio systemd per avvio automatico di X (startx)..."
-
 STARTX_SERVICE_PATH="/etc/systemd/system/startx.service"
 
-sudo tee $STARTX_SERVICE_PATH > /dev/null <<EOF
+sudo tee "$STARTX_SERVICE_PATH" > /dev/null <<EOF
 [Unit]
 Description=Avvio automatico GUI con startx
 After=network.target
@@ -70,7 +84,7 @@ echo "✅ Avvio grafico configurato con systemd (startx.service)"
 echo "=== ⚙️ CONFIGURO SERVIZI SYSTEMD ==="
 
 # Backend FastAPI service
-cat <<EOF | sudo tee /etc/systemd/system/dryer-backend.service
+sudo tee /etc/systemd/system/dryer-backend.service > /dev/null <<EOF
 [Unit]
 Description=Dryer Backend (FastAPI)
 After=network.target
@@ -86,7 +100,7 @@ WantedBy=multi-user.target
 EOF
 
 # Frontend serve service
-cat <<EOF | sudo tee /etc/systemd/system/dryer-frontend.service
+sudo tee /etc/systemd/system/dryer-frontend.service > /dev/null <<EOF
 [Unit]
 Description=Dryer Frontend (React static build with serve)
 After=network.target
@@ -111,13 +125,13 @@ echo "📂 Creo cartella per i log dell'applicazione..."
 mkdir -p "$PROJECT_DIR/logs"
 
 echo "🛜 Aggiungo permessi per gestire le reti"
-sudo usermod -aG netdev $USER
+sudo usermod -aG netdev "$USERNAME"
 
 POLKIT_FILE="/etc/polkit-1/localauthority/50-local.d/10-nmcli.pkla"
 
-sudo bash -c "cat > $POLKIT_FILE" <<EOF
-[Allow NetworkManager all permissions for pi user]
-Identity=unix-user:pi
+sudo tee "$POLKIT_FILE" > /dev/null <<EOF
+[Allow NetworkManager all permissions for user]
+Identity=unix-user:$USERNAME
 Action=org.freedesktop.NetworkManager.*
 ResultAny=yes
 ResultInactive=yes
@@ -127,26 +141,15 @@ EOF
 echo "File $POLKIT_FILE creato con successo."
 
 echo "🔌 ABILITO INTERFACCE HARDWARE (SPI, I2C)"
+sudo sed -i 's/^#dtparam=spi=on/dtparam=spi=on/' /boot/config.txt || true
+grep -q '^dtparam=spi=on' /boot/config.txt || echo 'dtparam=spi=on' | sudo tee -a /boot/config.txt
+sudo sed -i 's/^#dtparam=i2c_arm=on/dtparam=i2c_arm=on/' /boot/config.txt || true
+grep -q '^dtparam=i2c_arm=on' /boot/config.txt || echo 'dtparam=i2c_arm=on' | sudo tee -a /boot/config.txt
 
-# Abilita SPI
-sudo sed -i 's/^#dtparam=spi=on/dtparam=spi=on/' /boot/config.txt
-if ! grep -q '^dtparam=spi=on' /boot/config.txt; then
-    echo 'dtparam=spi=on' | sudo tee -a /boot/config.txt
-fi
+echo "spi-dev" | sudo tee -a /etc/modules || true
+echo "i2c-dev" | sudo tee -a /etc/modules || true
 
-# Abilita I2C
-sudo sed -i 's/^#dtparam=i2c_arm=on/dtparam=i2c_arm=on/' /boot/config.txt
-if ! grep -q '^dtparam=i2c_arm=on' /boot/config.txt; then
-    echo 'dtparam=i2c_arm=on' | sudo tee -a /boot/config.txt
-fi
-
-echo "spi-dev" | sudo tee -a /etc/modules
-echo "i2c-dev" | sudo tee -a /etc/modules
-
-
-USER="pi"
-echo "🔧 Configurazione permessi sudo per il reboot dell'utente '$USER'..."
-
+echo "🔧 Configurazione permessi sudo per reboot senza password..."
 REBOOT_PATH=$(which reboot)
 if [[ -z "$REBOOT_PATH" ]]; then
     echo "❌ reboot non trovato!"
@@ -154,8 +157,9 @@ if [[ -z "$REBOOT_PATH" ]]; then
 fi
 
 SUDOERS_FILE="/etc/sudoers.d/reboot_without_password"
-cat <<EOF > "$SUDOERS_FILE"
-$USER ALL=NOPASSWD: $REBOOT_PATH
+sudo tee "$SUDOERS_FILE" > /dev/null <<EOF
+$USERNAME ALL=NOPASSWD: $REBOOT_PATH
 EOF
+sudo chmod 440 "$SUDOERS_FILE"
 
-chmod 440 "$SUDOERS_FILE"
+echo "✅ Installazione completata senza richieste interattive."
