@@ -1,5 +1,10 @@
+Adafruit-Blinka==8.67.0
+Adafruit-Blinka-Raspberry-Pi5-Neopixel==1.0.0rc2
+adafruit-circuitpython-busdevice==5.2.14
+adafruit-circuitpython-connectionmanager==3.1.6
 adafruit-circuitpython-dht==4.0.9
 adafruit-circuitpython-requests==4.1.13
+adafruit-circuitpython-sht4x==1.0.25
 adafruit-circuitpython-typing==1.12.1
 Adafruit-PlatformDetect==3.81.0
 Adafruit-PureIO==1.1.11
@@ -20,9 +25,11 @@ httptools==0.6.4
 httpx==0.28.1
 idna==3.10
 Jinja2==3.1.6
+lgpio==0.2.2.0
 markdown-it-py==3.0.0
 MarkupSafe==3.0.2
 mdurl==0.1.2
+pigpio==1.78
 pydantic==2.11.7
 pydantic_core==2.33.2
 pyftdi==0.56.0
@@ -37,6 +44,7 @@ rich==14.0.0
 rich-toolkit==0.14.8
 rignore==0.6.4
 RPi.GPIO==0.7.1
+rpi_ws281x==5.0.0
 sentry-sdk==2.33.1
 shellingham==1.5.4
 sniffio==1.3.1
@@ -51,4 +59,3 @@ uvicorn==0.35.0
 uvloop==0.21.0
 watchfiles==1.1.0
 websockets==15.0.1
-pigpio==1.78
