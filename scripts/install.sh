@@ -34,8 +34,17 @@ source venv/bin/activate
 
 echo "📦 Installo dipendenze Python da requirements.txt..."
 pip install --upgrade pip
+
 if [ -f "requirements.txt" ]; then
-    pip install -r requirements.txt
+    echo "📦 Tentativo 1: installazione da piwheels + pypi"
+    if ! pip install -r requirements.txt --default-timeout=100; then
+        echo "⚠️ Installazione fallita, ritento (2/3) usando solo PyPI..."
+        if ! pip install -r requirements.txt --index-url https://pypi.org/simple --default-timeout=100; then
+            echo "⚠️ Installazione fallita di nuovo, ritento (3/3) con DNS Google e PyPI..."
+            echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf > /dev/null || true
+            pip install -r requirements.txt --index-url https://pypi.org/simple --default-timeout=100
+        fi
+    fi
 else
     echo "⚠️ Nessun requirements.txt trovato, salto installazione pacchetti Python."
 fi
