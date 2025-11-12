@@ -16,12 +16,25 @@ sudo apt-get install --no-install-recommends -y \
     x11-xserver-utils \
     xinit \
     openbox \
+    lightdm \
+    unclutter \
     chromium-browser \
     python3-venv \
     python3-pip \
     npm \
     git \
     curl
+
+# Imposta LightDM per login automatico in grafica
+echo "🖥️ Configuro LightDM per login automatico..."
+LIGHTDM_CONF="/etc/lightdm/lightdm.conf"
+sudo mkdir -p /etc/lightdm
+sudo tee "$LIGHTDM_CONF" > /dev/null <<EOF
+[Seat:*]
+autologin-user=$USERNAME
+autologin-user-timeout=0
+user-session=openbox
+EOF
 
 echo "📦 Aggiorno Node..."
 sudo apt-get remove -y nodejs || true
@@ -34,13 +47,12 @@ source venv/bin/activate
 
 echo "📦 Installo dipendenze Python da requirements.txt..."
 pip install --upgrade pip
-
 if [ -f "requirements.txt" ]; then
     echo "📦 Tentativo 1: installazione da piwheels + pypi"
     if ! pip install -r requirements.txt --default-timeout=100; then
-        echo "⚠️ Installazione fallita, ritento (2/3) usando solo PyPI..."
+        echo "⚠️ Ritento (2/3) usando solo PyPI..."
         if ! pip install -r requirements.txt --index-url https://pypi.org/simple --default-timeout=100; then
-            echo "⚠️ Installazione fallita di nuovo, ritento (3/3) con DNS Google e PyPI..."
+            echo "⚠️ Ritento (3/3) con DNS Google..."
             echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf > /dev/null || true
             pip install -r requirements.txt --index-url https://pypi.org/simple --default-timeout=100
         fi
@@ -65,30 +77,6 @@ fi
 
 echo "📦 Installo globalmente il server statico serve..."
 sudo npm install -g serve
-
-echo "🚀 Creo servizio systemd per avvio automatico di X (startx)..."
-STARTX_SERVICE_PATH="/etc/systemd/system/startx.service"
-
-sudo tee "$STARTX_SERVICE_PATH" > /dev/null <<EOF
-[Unit]
-Description=Avvio automatico GUI con startx
-After=network.target
-
-[Service]
-User=$USERNAME
-WorkingDirectory=/home/$USERNAME
-Environment=DISPLAY=:0
-ExecStart=/usr/bin/startx
-Restart=on-failure
-
-[Install]
-WantedBy=graphical.target
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable startx.service
-
-echo "✅ Avvio grafico configurato con systemd (startx.service)"
 
 echo "=== ⚙️ CONFIGURO SERVIZI SYSTEMD ==="
 
@@ -137,7 +125,6 @@ echo "🛜 Aggiungo permessi per gestire le reti"
 sudo usermod -aG netdev "$USERNAME"
 
 POLKIT_FILE="/etc/polkit-1/localauthority/50-local.d/10-nmcli.pkla"
-
 sudo tee "$POLKIT_FILE" > /dev/null <<EOF
 [Allow NetworkManager all permissions for user]
 Identity=unix-user:$USERNAME
@@ -149,7 +136,7 @@ EOF
 
 echo "File $POLKIT_FILE creato con successo."
 
-echo "🔌 ABILITO INTERFACCE HARDWARE (SPI, I2C)"
+echo "🔌 Abilito interfacce hardware (SPI, I2C)"
 sudo sed -i 's/^#dtparam=spi=on/dtparam=spi=on/' /boot/config.txt || true
 grep -q '^dtparam=spi=on' /boot/config.txt || echo 'dtparam=spi=on' | sudo tee -a /boot/config.txt
 sudo sed -i 's/^#dtparam=i2c_arm=on/dtparam=i2c_arm=on/' /boot/config.txt || true
@@ -158,17 +145,23 @@ grep -q '^dtparam=i2c_arm=on' /boot/config.txt || echo 'dtparam=i2c_arm=on' | su
 echo "spi-dev" | sudo tee -a /etc/modules || true
 echo "i2c-dev" | sudo tee -a /etc/modules || true
 
-echo "🔧 Configurazione permessi sudo per reboot senza password..."
+echo "🔧 Configuro permessi sudo per reboot senza password..."
 REBOOT_PATH=$(which reboot)
-if [[ -z "$REBOOT_PATH" ]]; then
-    echo "❌ reboot non trovato!"
-    exit 1
-fi
-
 SUDOERS_FILE="/etc/sudoers.d/reboot_without_password"
 sudo tee "$SUDOERS_FILE" > /dev/null <<EOF
 $USERNAME ALL=NOPASSWD: $REBOOT_PATH
 EOF
 sudo chmod 440 "$SUDOERS_FILE"
 
-echo "✅ Installazione completata senza richieste interattive."
+echo "🧩 Configuro autostart di Openbox (kiosk)..."
+mkdir -p /home/$USERNAME/.config/openbox
+cat > /home/$USERNAME/.config/openbox/autostart <<EOF
+xset s off
+xset -dpms
+xset s noblank
+unclutter -idle 0 &
+chromium-browser --noerrdialogs --disable-infobars --kiosk http://localhost:3000/?kiosk=true &
+EOF
+chown -R $USERNAME:$USERNAME /home/$USERNAME/.config
+
+echo "✅ Installazione completata — sistema kiosk pronto al riavvio!"
