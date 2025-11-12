@@ -4,6 +4,7 @@ try:
     IS_RASPBERRY = True
 except (ImportError, NotImplementedError):
     IS_RASPBERRY = False
+    print("[Fan] RPi.GPIO not available, running in simulation mode.")
 
 class Fan:
     def __init__(self, gpio_pin: int = 24):

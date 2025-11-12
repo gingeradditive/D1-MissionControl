@@ -7,6 +7,7 @@ try:
     IS_RASPBERRY = True
 except (ImportError, NotImplementedError):
     IS_RASPBERRY = False
+    print("[Heater] RPi.GPIO not available, running in simulation mode.")
 
 class Heater:
     def __init__(self, gpio_pin: int = 23):

@@ -11,6 +11,7 @@ try:
     IS_RASPBERRY = True
 except (ImportError, NotImplementedError):
     IS_RASPBERRY = False
+    print("[Sensors] Hardware libraries not available, running in simulation mode.")
 
 from backend.dryer.utils import compute_absolute_humidity, compute_dew_point
 

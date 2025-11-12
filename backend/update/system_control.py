@@ -6,6 +6,7 @@ try:
     IS_RASPBERRY = True
 except (ImportError, NotImplementedError):
     IS_RASPBERRY = False
+    print("[System Control] RPi.GPIO not available, running in simulation mode.")
 
 
 def run_command(command: str, cwd: Path = None) -> str:

@@ -6,6 +6,7 @@ try:
     IS_RASPBERRY = True
 except (ImportError, NotImplementedError):
     IS_RASPBERRY = False
+    print("[Network] RPi.GPIO not available, running in simulation mode.")
 
 
 def get_status() -> dict:

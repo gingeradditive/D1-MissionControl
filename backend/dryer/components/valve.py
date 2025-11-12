@@ -7,6 +7,7 @@ try:
     IS_RASPBERRY = True
 except Exception:
     IS_RASPBERRY = False
+    print("[Valve] pigpio not available, running in simulation mode.")
 
 class Valve:
     """
