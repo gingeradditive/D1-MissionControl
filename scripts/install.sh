@@ -164,4 +164,9 @@ chromium-browser --noerrdialogs --disable-infobars --kiosk http://localhost:3000
 EOF
 chown -R $USERNAME:$USERNAME /home/$USERNAME/.config
 
+echo "🔌 Installo e abilito pigpio daemon..."
+sudo apt-get install -y pigpio
+sudo systemctl enable pigpiod.service
+sudo systemctl start pigpiod.service
+
 echo "✅ Installazione completata — sistema kiosk pronto al riavvio!"
